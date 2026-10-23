@@ -1,0 +1,2549 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{box-sizing:border-box}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Sophia's Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a planner page read top to bottom — 日程 (only booked slots) → 三栏目标 (月/周/日) → Learnings & Task; 周报 opens under the header */
+:root{
+  --paper:#F1F4F2; --sheet:#FFFFFF; --ink:#1C2724; --muted:#66736F; --line:#DCE3DF;
+  --accent:#1E6B5C; --accent-soft:#E2EFEB;
+  --ok:#2F7D4F; --warn:#A86A12; --warn-soft:#F7ECD9; --bad:#B5473A; --bad-soft:#F6E3E0;
+  --mtg:#1E5F6B; --mtg-soft:#DCEDF0; --dsc:#5B4B9A; --dsc-soft:#E9E5F6; --oth:#5E6A66; --oth-soft:#E8ECEA;
+  --f-display:"Noto Serif SC","Songti SC","SimSun",serif;
+  --f-body:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111715; --sheet:#19211F; --ink:#E5ECE9; --muted:#93A19C; --line:#2B3632;
+  --accent:#62B9A3; --accent-soft:#1F332E;
+  --ok:#6CC08A; --warn:#E2AA4E; --warn-soft:#352A17; --bad:#E3806F; --bad-soft:#3A2220;
+  --mtg:#7CC6D4; --mtg-soft:#1C3237; --dsc:#B5A6EE; --dsc-soft:#2A2540; --oth:#A9B5B0; --oth-soft:#262E2C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111715; --sheet:#19211F; --ink:#E5ECE9; --muted:#93A19C; --line:#2B3632;
+  --accent:#62B9A3; --accent-soft:#1F332E;
+  --ok:#6CC08A; --warn:#E2AA4E; --warn-soft:#352A17; --bad:#E3806F; --bad-soft:#3A2220;
+  --mtg:#7CC6D4; --mtg-soft:#1C3237; --dsc:#B5A6EE; --dsc-soft:#2A2540; --oth:#A9B5B0; --oth-soft:#262E2C; color-scheme:dark}
+
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.7rem;margin:0;letter-spacing:.02em;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem;margin-top:2px}
+.nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:6px 11px;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--sheet);font-weight:600}
+.nav .date{font-family:var(--f-display);font-weight:600;font-size:1.05rem;padding:0 8px;min-width:10ch;text-align:center}
+.nav input[type=date]{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:5px 8px;font:inherit;font-size:.85rem;color:var(--ink)}
+
+.notice{border:1px dashed var(--line);border-radius:10px;padding:12px 14px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.notice button{border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:3px 10px;font-size:.85rem}
+
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:12px;min-width:0}
+.panel-head{padding:16px 18px 12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 16px}
+.sec-title{font-family:var(--f-display);font-weight:700;font-size:1.3rem}
+.range{color:var(--muted);font-size:.82rem}
+.code{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);letter-spacing:.03em}
+.sum{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;color:var(--muted)}
+.sum b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.hint{font-size:.8rem;color:var(--muted)}
+.empty{padding:18px;color:var(--muted);font-size:.88rem;text-align:center}
+
+/* ---- 周报 ---- */
+.report{border-color:var(--accent)}
+.report textarea{display:block;width:100%;box-sizing:border-box;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:.9rem;line-height:1.7;padding:14px 18px;resize:vertical;min-height:320px}
+.report .acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---- 日程 ---- */
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:0 18px 12px}
+.wk button{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:5px 0 6px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.wk button:hover{border-color:var(--accent)}
+.wk button.on{border-color:var(--accent);background:var(--accent-soft)}
+.wk .wd{font-size:.72rem;color:var(--muted)}
+.wk .dn{font-family:var(--f-display);font-weight:600;font-size:.98rem;font-variant-numeric:tabular-nums}
+.wk button.today .dn{color:var(--accent)}
+.wk .n{font-family:var(--f-mono);font-size:.68rem;color:var(--muted);height:1.1em}
+ul.agenda{list-style:none;margin:0;padding:0 8px 6px;display:flex;flex-direction:column}
+.ag{display:grid;grid-template-columns:7.4em minmax(0,1fr) auto;gap:2px 14px;align-items:start;padding:11px 10px;border-top:1px solid var(--line)}
+.ag:first-child{border-top:0}
+.ag .tm{font-family:var(--f-mono);font-size:.95rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ag .tm small{display:block;font-size:.74rem;color:var(--muted);font-weight:400}
+.ag .what{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ag .ttl{font-weight:600;overflow-wrap:anywhere}
+.ag .info{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.82rem;color:var(--muted)}
+.ag .info span{overflow-wrap:anywhere}
+.ag .mno{font-family:var(--f-mono);color:var(--ink)}
+.ag.past .tm,.ag.past .ttl{color:var(--muted)}
+.ag.live .tm{color:var(--bad)}
+.copy{border:1px solid var(--line);background:transparent;border-radius:5px;padding:0 6px;font-size:.72rem;color:var(--muted);margin-left:4px}
+.copy:hover{color:var(--ink);border-color:var(--ink)}
+.kind{font-size:.72rem;border-radius:5px;padding:0 6px;line-height:1.6;align-self:flex-start}
+.k-meeting{background:var(--mtg-soft);color:var(--mtg)}
+.k-discussion{background:var(--dsc-soft);color:var(--dsc)}
+.k-other{background:var(--oth-soft);color:var(--oth)}
+.row-acts{display:flex;gap:2px;opacity:.55}
+.ag:hover .row-acts,.ag:focus-within .row-acts,li.item:hover .row-acts,li.item:focus-within .row-acts,.nt:hover .row-acts,.nt:focus-within .row-acts{opacity:1}
+.row-acts button{background:transparent;border:0;border-radius:6px;padding:2px 6px;font-size:.78rem;color:var(--muted);white-space:nowrap}
+.row-acts button:hover{background:var(--line);color:var(--ink)}
+.row-acts button.push:hover{color:var(--warn)}
+.row-acts button.sure{color:var(--bad);font-weight:600}
+
+form.form{border-top:1px dashed var(--line);padding:14px 18px 16px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 12px;align-items:end}
+@media (max-width:760px){form.form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);min-width:0}
+.fld input,.fld select,.fld textarea{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 9px;font:inherit;font-size:.9rem;color:var(--ink);min-width:0}
+.fld textarea{resize:vertical;min-height:2.6em;line-height:1.5}
+.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}.span6{grid-column:1/-1}
+@media (max-width:760px){.span2,.span3,.span4{grid-column:1/-1}.half{grid-column:span 1}}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:3px 12px;font-size:.84rem}
+.chips button.on{border-color:currentColor;font-weight:600}
+.form-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.form-acts button{border-radius:8px;padding:7px 14px;font-size:.88rem;border:1px solid var(--line);background:var(--sheet)}
+.form-acts .primary{background:var(--accent);border-color:var(--accent);color:var(--sheet);font-weight:600}
+.err{color:var(--bad);font-size:.8rem}
+.chk-line{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--ink)}
+.add-toggle{margin:0 18px 16px;border:1px dashed var(--line);background:transparent;border-radius:8px;padding:8px;color:var(--muted);font-size:.88rem;width:calc(100% - 36px)}
+.add-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---- 目标 ---- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);grid-template-areas:"month month" "day week";gap:18px;align-items:start}
+.sheet.lv-month{flex-direction:row}
+.lv-month>.sheet-head{width:240px;flex:none;border-bottom:0;border-right:1px solid var(--line)}
+.lv-month>.sheet-body{flex:1;min-width:0;display:flex;flex-direction:column}
+.lv-month ul.items{display:block;columns:3;column-gap:18px}
+.lv-month ul.items>li{break-inside:avoid;margin-bottom:2px}
+.lv-day{grid-area:day}.lv-week{grid-area:week}.lv-month{grid-area:month}
+.lv-week ul.items{display:block;columns:2;column-gap:18px}
+.lv-week ul.items>li{break-inside:avoid;margin-bottom:2px}
+@media (max-width:1100px){.lv-month ul.items{columns:2}}
+@media (max-width:900px){.grid{grid-template-columns:1fr;grid-template-areas:"month" "day" "week"}.lv-week ul.items,.lv-month ul.items{columns:1}.sheet.lv-month{flex-direction:column}.lv-month>.sheet-head{width:auto;border-right:0;border-bottom:1px solid var(--line)}}
+.done-toggle{align-self:flex-start;margin:0 14px 6px;border:0;background:transparent;color:var(--muted);font-size:.8rem;padding:2px 0}
+.done-toggle:hover{color:var(--ink)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-width:0}
+.sheet-head{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.label-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pager{display:flex;gap:4px;align-items:center;flex:none}
+.pg{border:1px solid var(--line);background:var(--sheet);border-radius:7px;min-width:28px;height:28px;padding:0 7px;font-size:.95rem;line-height:1;color:var(--ink)}
+.pg:hover{border-color:var(--accent);color:var(--accent)}
+.pg.now{font-size:.76rem;color:var(--accent);border-color:var(--accent)}
+.lvl{font-family:var(--f-display);font-weight:700;font-size:1.2rem}
+.prog{display:flex;align-items:center;gap:12px}
+.pct{font-family:var(--f-display);font-weight:700;font-size:1.5rem;line-height:1;font-variant-numeric:tabular-nums;min-width:3.2ch}
+.bar{flex:1;height:8px;background:var(--accent-soft);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .35s ease}
+.count{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.carry{margin:12px 14px 0;background:var(--bad-soft);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.carry-title{font-size:.8rem;font-weight:600;color:var(--bad);letter-spacing:.04em}
+.carry-row{display:flex;align-items:center;gap:8px;font-size:.88rem;min-width:0}
+.carry-row span.t{flex:1;min-width:0;overflow-wrap:anywhere}
+.carry-row .from{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);white-space:nowrap}
+.carry-row button{border:1px solid var(--bad);color:var(--bad);background:transparent;border-radius:6px;padding:1px 8px;font-size:.78rem;white-space:nowrap}
+ul.items{list-style:none;margin:0;padding:8px 8px 4px;display:flex;flex-direction:column}
+li.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:9px 8px;border-radius:8px}
+li.item:hover{background:var(--paper)}
+.chk{width:20px;height:20px;margin-top:1px;border:1.6px solid var(--muted);border-radius:6px;background:transparent;display:grid;place-items:center;padding:0;flex:none}
+.chk svg{width:13px;height:13px;opacity:0}
+.chk svg path{stroke:var(--sheet)}
+.done>.chk,.chk.on{background:var(--ok);border-color:var(--ok)}
+.done>.chk svg,.chk.on svg{opacity:1}
+.ttl2{overflow-wrap:anywhere;white-space:pre-wrap}
+li.done .ttl2{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+.meta{grid-column:2;display:flex;flex-wrap:wrap;gap:4px 6px}
+.chip{font-size:.72rem;border-radius:5px;padding:0 6px;line-height:1.6}
+.chip.delay{background:var(--warn-soft);color:var(--warn)}
+.chip.ex{background:var(--accent-soft);color:var(--accent)}
+.chip.when{color:var(--muted);font-family:var(--f-mono);padding:0}
+.edit-in{width:100%;box-sizing:border-box;border:1px solid var(--accent);border-radius:6px;padding:2px 6px;font:inherit;background:var(--sheet);color:var(--ink)}
+form.add{display:flex;gap:8px;padding:10px 14px 14px;border-top:1px dashed var(--line);margin-top:auto}
+form.add{align-items:flex-end}
+form.add textarea{flex:1;min-width:0;border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 10px;font:inherit;font-size:.9rem;line-height:1.5;color:var(--ink);resize:none;overflow:hidden;box-sizing:border-box;display:block}
+form.add button{border:0;background:var(--accent);color:var(--sheet);border-radius:8px;padding:0 14px;font-size:.9rem;font-weight:600;height:2.4rem;flex:none}
+textarea.edit-in{resize:none;overflow:hidden;line-height:1.5;display:block}
+.fld textarea.grow{resize:none;overflow:hidden}
+
+/* ---- Learnings & Task ---- */
+.c-rule{background:var(--accent-soft);color:var(--accent)}
+.c-case{background:var(--mtg-soft);color:var(--mtg)}
+.c-idea{background:var(--warn-soft);color:var(--warn)}
+.c-doubt{background:var(--bad-soft);color:var(--bad)}
+.c-none{background:var(--oth-soft);color:var(--oth)}
+.chips button.c-rule,.chips button.c-case,.chips button.c-idea,.chips button.c-doubt{background:var(--paper)}
+.chips button.c-rule.on{background:var(--accent-soft)}.chips button.c-case.on{background:var(--mtg-soft)}
+.chips button.c-idea.on{background:var(--warn-soft)}.chips button.c-doubt.on{background:var(--bad-soft)}
+.chips button.p-drh.on,.chips button.p-impact.on,.chips button.t-current.on,.chips button.t-optimize.on,.chips button.tm.on,.chips button.f.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.filters{padding:0 18px 10px;display:flex;flex-direction:column;gap:6px}
+ul.notes{list-style:none;margin:0;padding:0 8px 6px;display:flex;flex-direction:column}
+.nt{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:start;padding:11px 10px;border-top:1px solid var(--line)}
+.nt:first-child{border-top:0}
+.nt .lead{display:flex;align-items:center;gap:8px;min-width:4.8em}
+.nt .body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.nt .txt{white-space:pre-wrap;overflow-wrap:anywhere}
+.nt.done .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+.nmeta{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:.78rem;color:var(--muted)}
+.tag{border:1px solid var(--line);border-radius:5px;padding:0 6px;line-height:1.55;color:var(--ink)}
+.tag.p-drh,.tag.p-impact{font-weight:600}
+.tag.t-optimize{color:var(--warn);border-color:currentColor}
+.tag.tm{font-family:var(--f-mono);font-size:.72rem}
+.who{overflow-wrap:anywhere}
+.nt .flags{display:flex;gap:6px;flex-wrap:wrap}
+.flag{font-size:.72rem;border:1px solid currentColor;border-radius:5px;padding:0 6px;line-height:1.5}
+.flag.task{color:var(--accent)}
+.flag.due{color:var(--muted)}
+.flag.open{color:var(--bad)}
+.flag.ok{color:var(--ok)}
+.chip.due{color:var(--muted);border:1px solid var(--line)}
+.chip.late{color:var(--bad);border:1px solid currentColor}
+.chip.src{background:var(--accent-soft);color:var(--accent)}
+.older{margin:0 14px 12px;background:var(--paper);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.older-title{font-size:.8rem;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.older-row{display:flex;align-items:center;gap:8px;font-size:.88rem;min-width:0;flex-wrap:wrap}
+.older-row .t{flex:1;min-width:10em;overflow-wrap:anywhere;white-space:pre-wrap}
+.older-row .from{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);white-space:nowrap}
+.older-row .from.late{color:var(--bad)}
+.older-row.parked{opacity:.75}
+.older-row .t.lt,.older-row .t{flex:1;min-width:10em}
+.older-row button.park{color:var(--muted)}
+.filed-line{padding:0 18px 8px;font-size:.8rem;color:var(--muted)}
+.filed-line a{color:var(--accent)}
+.filed-line .linkish{font-size:.8rem}
+.park-toggle{align-self:flex-start;border:0;background:transparent;color:var(--muted);font-size:.8rem;padding:2px 0;margin-top:2px}
+.park-toggle:hover{color:var(--ink)}
+.older-row button.res{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:1px 8px;font-size:.78rem;white-space:nowrap}
+.form-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap}
+.form-title{font-weight:600;font-size:.92rem}
+.linkish{border:0;background:transparent;color:var(--accent);font-size:.85rem;padding:0;text-decoration:underline;text-underline-offset:3px}
+.chip-rows{display:flex;flex-direction:column;gap:6px}
+.chip-rows input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 9px;font:inherit;font-size:.88rem;color:var(--ink);min-width:0}
+.due-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.due-row input[type=date]{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:5px 8px;font:inherit;font-size:.88rem;color:var(--ink)}
+.due-row input[type=date]:disabled{opacity:.45}
+ol.bulk-rows{list-style:decimal;margin:0;padding-left:1.6em;display:flex;flex-direction:column;gap:10px}
+.brow{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--paper);border-radius:9px;position:relative}
+.brow textarea{border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:6px 9px;font:inherit;font-size:.9rem;line-height:1.5;color:var(--ink);width:100%;box-sizing:border-box;resize:none;overflow:hidden;display:block}
+.bctl{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.bctl select,.bctl input.mini{border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:4px 6px;font:inherit;font-size:.82rem;color:var(--ink);min-width:0;max-width:100%}
+.bctl input.mini{width:9em}
+.bctl .chips button{padding:1px 9px;font-size:.78rem}
+.bctl input[type=date]:disabled{opacity:.45}
+.brow-acts{display:flex;gap:10px;align-items:center;align-self:flex-end}
+.bsave{border:1px solid var(--accent);background:var(--sheet);color:var(--accent);border-radius:7px;padding:3px 12px;font-size:.8rem;font-weight:600}
+.bsave:hover{background:var(--accent);color:var(--sheet)}
+.bsave:disabled{opacity:.5;cursor:default}
+.brow .rm{border:0;background:transparent;color:var(--muted);font-size:.78rem;padding:0}
+.brow .rm:hover{color:var(--bad)}
+#bulk-raw{min-height:6em}
+
+/* ---- 页面切换 ---- */
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tab{padding:5px 14px;border-radius:99px;border:1px solid var(--line);color:var(--muted);text-decoration:none;font-size:.88rem;display:inline-flex;align-items:center;gap:6px;background:var(--sheet)}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.bk{background:transparent;border-style:dashed;font-size:.8rem;padding:4px 10px}
+.bk-msg{font-size:.78rem;color:var(--muted);align-self:center}
+.tab.on{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.badge{background:var(--bad);color:var(--sheet);border-radius:99px;font-size:.7rem;padding:0 6px;line-height:1.5;font-variant-numeric:tabular-nums}
+.view{display:flex;flex-direction:column;gap:22px}
+.view[hidden]{display:none!important}
+.flag.kb{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.answer{font-size:.84rem;color:var(--ok);white-space:pre-wrap;overflow-wrap:anywhere}
+.ans-form{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap}
+.ans-form textarea{flex:1;min-width:12em;border:1px solid var(--accent);background:var(--sheet);border-radius:7px;padding:5px 8px;font:inherit;font-size:.88rem;color:var(--ink);resize:none;overflow:hidden;line-height:1.5}
+.ans-form button{border-radius:7px;padding:5px 12px;font-size:.84rem;border:1px solid var(--line);background:var(--sheet)}
+.ans-form .primary{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+
+/* ---- 知识库 ---- */
+.kb-ask{display:flex;gap:8px;align-items:flex-end;padding:0 18px 12px;flex-wrap:wrap}
+.kb-ask textarea{flex:1;min-width:14em;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 12px;font:inherit;font-size:.95rem;line-height:1.5;color:var(--ink);resize:none;overflow:hidden;box-sizing:border-box}
+.kb-ask button{border-radius:9px;padding:0 16px;height:2.6rem;font-size:.9rem;border:1px solid var(--line);background:var(--sheet)}
+.kb-ask .primary{background:var(--accent);border-color:var(--accent);color:var(--sheet);font-weight:600}
+.kb-ask button:disabled{opacity:.5;cursor:default}
+.kb-answer{margin:0 18px 14px;padding:12px 14px;border-radius:9px;background:var(--accent-soft);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.kb-search{padding:0 18px 16px}
+.kb-search input{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--sheet);border-radius:9px;padding:8px 12px;font:inherit;font-size:.9rem;color:var(--ink)}
+.kb-sort{border-style:dashed}
+.sec-title.small{font-size:1.1rem}
+.kb-sort .acts{display:flex;gap:8px;flex-wrap:wrap}
+.pad{padding:0 18px 14px}
+.pend-list{list-style:none;margin:0;padding:0 14px 12px;display:flex;flex-direction:column;gap:2px}
+.pm-row{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;padding:6px 4px;flex-wrap:wrap;white-space:pre-wrap;overflow-wrap:anywhere}
+.pm-row .t{flex:1;min-width:12em}
+.pm-row .from{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+ol.draft-list{margin:0;padding:0 18px 16px 2.4em;display:flex;flex-direction:column;gap:12px}
+.draft{background:var(--paper);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.draft.off{opacity:.5}
+.draft>*{max-width:100%}
+.draft-hd{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.draft-edit{display:flex;flex-direction:column;gap:6px;width:100%}
+.draft-edit select,.draft-edit textarea{border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:5px 8px;font:inherit;font-size:.88rem;color:var(--ink);box-sizing:border-box;max-width:100%}
+.draft-edit textarea{width:100%;resize:none;overflow:hidden;line-height:1.5}
+.draft-edit .btn{align-self:flex-start}
+.draft-src{border-top:1px dashed var(--line);padding-top:6px;width:100%}
+.kb-label{font-size:.74rem;color:var(--muted);letter-spacing:.04em;margin-right:6px}
+.kb-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.kb-layout{grid-template-columns:1fr}}
+.kb-dir{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px)}
+@media (max-width:820px){.kb-dir{position:static}}
+.dir-grp{display:flex;flex-direction:column;gap:1px;border-top:1px solid var(--line);padding-top:8px}
+.dir-row{display:flex;align-items:center;gap:4px}
+.dir-row .dir-item{flex:1}
+.dir-item,.dir-prog{display:flex;justify-content:space-between;gap:8px;align-items:center;border:0;background:transparent;border-radius:7px;padding:5px 8px;text-align:left;font-size:.86rem;width:100%}
+.dir-prog{font-weight:600;font-size:.84rem}
+.dir-item{padding-left:16px}
+.dir-item:first-child{padding-left:8px}
+.dir-item:hover,.dir-prog:hover{background:var(--paper)}
+.dir-item.on,.dir-prog.on{background:var(--accent-soft);color:var(--accent)}
+.dir-item .n,.dir-prog .n{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.dir-row .rm{border:0;background:transparent;color:var(--bad);font-size:.74rem}
+.dir-add{display:flex;gap:4px;padding:4px 0 0 16px}
+.dir-add input{flex:1;min-width:0;border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:3px 6px;font:inherit;font-size:.82rem;color:var(--ink)}
+.dir-add button{border:1px solid var(--line);background:var(--sheet);border-radius:6px;font-size:.78rem;padding:0 8px}
+.kb-dir .linkish{align-self:flex-start;margin-left:8px}
+.kb-main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.kb-crumb{font-size:.82rem;color:var(--muted)}
+.kb-item{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.kb-item.form{display:grid}
+.kb-item-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.kb-item-top>div:first-child{display:flex;flex-direction:column;gap:5px;min-width:0}
+.kb-item:hover .row-acts{opacity:1}
+.kb-title{font-family:var(--f-display);font-size:1.08rem;font-weight:700;margin:0;overflow-wrap:anywhere}
+.kb-title.sm{font-size:.98rem}
+.kb-title-btn{border:0;background:transparent;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.kb-title-btn:hover{color:var(--accent)}
+.kb-summary.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kb-more{align-self:flex-start;font-size:.8rem}
+.kb-orig{display:flex;flex-direction:column;gap:6px}
+.orig-row{background:var(--paper);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.orig-text{font-size:.88rem;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.kb-summary{margin:0;font-weight:600;line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap}
+.kb-detail{font-size:.88rem;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;border-left:2px solid var(--line);padding-left:10px}
+.kb-cases ul{margin:4px 0 0;padding-left:1.2em;font-size:.86rem;display:flex;flex-direction:column;gap:3px}
+.kb-src{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.src-chip{font-size:.74rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;line-height:1.6}
+.kb-hist summary{font-size:.8rem;color:var(--muted);cursor:pointer}
+.hist-row{border-left:2px dashed var(--line);padding:4px 0 4px 10px;margin-top:6px;font-size:.86rem;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.kb-pmatch{background:var(--paper);border-radius:9px;padding:10px 12px}
+li.item>.row-acts,.nt>.row-acts{flex-direction:column;align-items:stretch;gap:1px;grid-row:span 2}
+li.item>.row-acts button,.nt>.row-acts button{padding:1px 6px;font-size:.74rem;line-height:1.5;text-align:right}
+li.item{column-gap:8px}
+textarea[data-grow]{field-sizing:content;min-height:2.4em;overflow:hidden}
+.lt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lt-title{font-weight:600;overflow-wrap:anywhere}
+.lt-row{display:flex;gap:6px;align-items:flex-start;min-width:0}
+.lt-rest{flex:1;min-width:0;color:var(--muted);font-size:.86rem;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:400;text-decoration:none}
+.lt-rest.clamp{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+.lt-toggle{flex:none;border:0;background:transparent;color:var(--accent);font-size:.78rem;padding:0 2px;line-height:1.6;text-decoration:underline;text-underline-offset:3px}
+li.done .ttl2 .lt-title,.nt.done .txt .lt-title{color:var(--muted);text-decoration:line-through}
+.rt-mgr{padding:4px 14px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.rt-mgr .linkish{font-size:.8rem}
+.rt-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;width:100%}
+.rt-list li{display:flex;gap:6px;align-items:center;font-size:.86rem;background:var(--paper);border-radius:7px;padding:5px 8px}
+.rt-list .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.rt-days{border:1px solid var(--line);background:var(--sheet);border-radius:99px;padding:0 8px;font-size:.74rem;white-space:nowrap}
+.rt-list .rm{border:0;background:transparent;color:var(--muted);font-size:.74rem;white-space:nowrap}
+.rt-list .rm.sure{color:var(--bad);font-weight:600}
+form.rt-add{padding:0;border:0;width:100%;margin:0}
+.rep-row{display:flex;gap:6px 20px;flex-wrap:wrap}
+.tsel{position:relative;display:flex;flex-direction:column}
+.tsel input{width:100%;box-sizing:border-box;font-family:var(--f-mono)}
+.tpop{position:absolute;top:calc(100% + 4px);left:0;right:0;min-width:7em;max-height:210px;overflow-y:auto;background:var(--sheet);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);z-index:20;padding:4px;display:flex;flex-direction:column}
+.tpop[hidden]{display:none}
+.topt{border:0;background:transparent;text-align:left;padding:5px 10px;border-radius:6px;font-family:var(--f-mono);font-size:.88rem;color:var(--ink)}
+.topt:hover{background:var(--paper)}
+.topt.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+/* ---- Tasks ---- */
+.tk-list{display:flex;flex-direction:column;gap:12px;padding:0 14px 12px}
+.tk{border:1px solid var(--line);border-radius:10px;background:var(--sheet);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.tk.archived{opacity:.7}
+.tk-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tk-fold{border:0;background:transparent;color:var(--muted);width:22px;padding:0;font-size:.9rem}
+.tk-title{flex:1;min-width:12em;border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;font:inherit;font-family:var(--f-display);font-weight:700;font-size:1.05rem;color:var(--ink)}
+.tk-title:hover,.tk-title:focus{border-color:var(--line);background:var(--paper)}
+.tk-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tk-count{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.tk-due{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:2px 6px;font:inherit;font-size:.8rem;color:var(--ink)}
+.tk-acts{display:flex;gap:10px;margin-left:auto}
+.tk-acts .linkish{font-size:.8rem}
+.tk-acts .danger{color:var(--bad);font-weight:600}
+.tk-bar{height:5px;flex:none}
+ol.tk-items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tk-item{display:grid;grid-template-columns:2.6em minmax(0,1fr);gap:8px;align-items:start;padding:4px 2px;border-radius:7px}
+.tk-item:hover{background:var(--paper)}
+.tk-no{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);text-align:right;padding-top:5px}
+.tk-item .chk{margin-top:4px}
+.tk-text{border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 6px;font:inherit;font-size:.92rem;line-height:1.55;color:var(--ink);resize:none;overflow:hidden;width:100%;box-sizing:border-box;display:block}
+.tk-text:hover,.tk-text:focus{border-color:var(--line);background:var(--sheet)}
+.tk-item.done .tk-text{color:var(--muted);text-decoration:line-through}
+.tk-iacts{display:flex;gap:2px;opacity:.45;padding-top:3px}
+.tk-item:hover .tk-iacts,.tk-item:focus-within .tk-iacts{opacity:1}
+.tk-iacts button{border:0;background:transparent;color:var(--muted);font-size:.76rem;padding:1px 5px;border-radius:5px}
+.tk-iacts button:hover{background:var(--line);color:var(--ink)}
+form.tk-add{display:grid;grid-template-columns:2.6em minmax(0,1fr);gap:8px;align-items:start;padding:0 2px}
+form.tk-add textarea{border:1px dashed var(--line);background:var(--paper);border-radius:7px;padding:5px 8px;font:inherit;font-size:.9rem;line-height:1.5;color:var(--ink);resize:none;overflow:hidden;width:100%;box-sizing:border-box}
+.tk-body{min-width:0}
+.tk-files{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:2px 6px 2px}
+.tk-file{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:2px 4px 2px 9px;font-size:.8rem}
+.tk-file a{color:var(--ink);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:22em}
+.tk-file a:hover{text-decoration:underline}
+.tk-file .ftype{font-family:var(--f-mono);font-size:.68rem;color:var(--muted);letter-spacing:.02em}
+.tk-file .fx{border:0;background:transparent;color:var(--muted);font-size:.75rem;padding:0 5px;border-radius:999px}
+.tk-file .fx:hover{background:var(--line);color:var(--ink)}
+.tk-file .fx.danger{color:var(--bad);font-weight:600}
+.tk-file .fx.pv{color:var(--accent);font-size:.72rem}
+.tk-file .fnote{font-size:.72rem;color:var(--muted);padding-right:6px}
+.tk-file .fnote.err{color:var(--bad)}
+.tk-file img{width:22px;height:22px;object-fit:cover;border-radius:4px}
+.tk-fadd{display:inline-flex;gap:2px;opacity:.4}
+.tk-item:hover .tk-fadd,.tk-item:focus-within .tk-fadd,form.tk-add .tk-fadd{opacity:1}
+.tk-fadd button{border:0;background:transparent;color:var(--muted);font-size:.76rem;padding:1px 6px;border-radius:5px}
+.tk-fadd button:hover{background:var(--line);color:var(--ink)}
+.tk-fadd .tk-mv:disabled{display:none}
+.tk-fadd .tk-del{margin-left:6px}.tk-fadd .tk-del.danger{color:var(--bad);font-weight:600}
+.tk-fadd .tk-mv:first-of-type{margin-left:6px}
+.tk-link{display:flex;gap:6px;flex-wrap:wrap;padding:2px 6px;width:100%}
+.tk-link input{flex:1;min-width:10em;border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:3px 7px;font:inherit;font-size:.82rem;color:var(--ink)}
+.tk-fmsg{font-size:.78rem;color:var(--muted);padding:2px 6px}
+.tk-fmsg.err{color:var(--bad)}
+.tk-item.drop,form.tk-add.drop{outline:2px dashed var(--accent);outline-offset:-2px}
+.vw-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.vw-box{background:var(--sheet);color:var(--ink);border-radius:12px;width:min(1100px,100%);height:min(88vh,100%);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.vw-head{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.vw-name{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vw-body{flex:1;overflow:auto;padding:14px 18px;display:flex;flex-direction:column;min-height:0}
+.vw-body.flush{padding:0}
+.vw-frame{flex:1;width:100%;border:0}
+.vw-img{max-width:100%;margin:auto}
+.vw-doc{max-width:46em;line-height:1.7;font-size:.95rem}
+.vw-doc table{border-collapse:collapse}.vw-doc td,.vw-doc th{border:1px solid var(--line);padding:4px 8px}
+.vw-doc img{max-width:100%}
+.vw-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.vw-tab{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;padding:3px 10px;font-size:.82rem}
+.vw-tab.on{background:var(--accent);color:var(--sheet);border-color:var(--accent)}
+.vw-scroll{overflow:auto;flex:1;min-height:0}
+.vw-table{border-collapse:collapse;font-size:.84rem}
+.vw-table th,.vw-table td{border:1px solid var(--line);padding:4px 8px;white-space:pre-wrap;vertical-align:top;max-width:28em}
+.vw-table th{background:var(--paper);position:sticky;top:0;text-align:left}
+.vw-pre{white-space:pre-wrap;font-family:var(--f-mono);font-size:.84rem;margin:0}
+.tk-grip{cursor:grab;user-select:none;touch-action:none;white-space:nowrap}
+.tk-grip .grip{opacity:.35;margin-right:3px;font-size:.95rem;transition:opacity .15s}
+.tk-item:hover .tk-grip .grip,.tk-item:focus-within .tk-grip .grip{opacity:.7}
+body.tk-dragging,body.tk-dragging *{cursor:grabbing!important;user-select:none}
+.tk-item.dragging{opacity:.45;background:var(--paper)}
+.tk-item.drop-before{box-shadow:inset 0 3px 0 var(--accent)}
+.tk-item.drop-after{box-shadow:inset 0 -3px 0 var(--accent)}
+.tk-bg{background:var(--accent-soft);border-radius:8px;padding:8px 10px 6px;display:flex;flex-direction:column;gap:2px}
+.tk-bg.drop{outline:2px dashed var(--accent);outline-offset:-2px}
+.tk-bg-label{font-size:.74rem;font-weight:600;color:var(--accent);letter-spacing:.06em;padding:0 6px}
+.tk-bg-text{border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 6px;font:inherit;font-size:.92rem;line-height:1.6;color:var(--ink);resize:none;overflow:hidden;width:100%;box-sizing:border-box;display:block}
+.tk-bg-text:hover,.tk-bg-text:focus{border-color:var(--line);background:var(--sheet)}
+.tk-bg .tk-fadd{opacity:.55}.tk-bg:hover .tk-fadd,.tk-bg:focus-within .tk-fadd{opacity:1}
+.ag-topic{grid-column:1/-1;margin-top:8px}
+.tk.embedded{background:var(--paper);border-color:transparent}
+.tk.embedded .tk-item:hover{background:var(--sheet)}
+.tk.embedded .tk-top{min-height:0}
+.tp-toggle{align-self:flex-start;border:1px solid var(--line);background:var(--sheet);border-radius:99px;padding:1px 10px;font-size:.78rem;color:var(--accent);margin-top:3px}
+.tp-toggle:hover,.tp-toggle.on{border-color:var(--accent)}
+.tp-toggle.on{background:var(--accent-soft)}
+.tp-toggle.add{color:var(--muted);border-style:dashed}
+.tp-toggle.add:hover{color:var(--accent)}
+.loose-topic{margin:4px 18px 12px;display:flex;flex-direction:column;gap:6px}
+.loose-hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.loose-sel{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:2px 6px;font:inherit;font-size:.8rem;color:var(--ink)}
+.tp-row{display:flex;gap:6px;flex-wrap:wrap}
+.tp-toggle.hist{color:var(--muted)}
+.tp-toggle.hist.on{color:var(--ink);background:var(--paper);border-color:var(--muted)}
+.ag-hist{grid-column:1/-1;margin-top:8px;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.hist-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hist-label{font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.05em}
+.hist-pick{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:2px 6px;font:inherit;font-size:.8rem;color:var(--ink)}
+.hist-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.hist-chip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:5px 10px;text-align:left;max-width:15em}
+.hist-chip:hover{border-color:var(--accent)}
+.hist-chip.on{border-color:var(--accent);background:var(--accent-soft)}
+.hist-chip .hd{font-family:var(--f-mono);font-size:.8rem;font-weight:500}
+.hist-chip .hn{font-size:.72rem;color:var(--muted)}
+.hist-chip .hp{font-size:.74rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hist-card{display:flex;flex-direction:column;gap:4px}
+.rep-sel{flex:none;border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:0 6px;height:2.4rem;font:inherit;font-size:.8rem;color:var(--muted);max-width:7.5em}
+.rep-sel.sm{height:1.9rem;font-size:.78rem}
+.edit-box{display:flex;flex-direction:column;gap:6px;min-width:0}
+.edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.edit-row .hint{font-size:.74rem}
+.rep-sel.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.quick .panel-head{padding-bottom:8px}
+form.quick-add{border-top:0;padding:0 18px 12px;margin:0}
+ul.quick-list{list-style:none;margin:0;padding:0 10px 8px;display:flex;flex-direction:column}
+.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:8px 8px;border-top:1px solid var(--line);align-items:start}
+.qrow:first-child{border-top:0}
+.qtext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92rem}
+.qtext.done{color:var(--muted);text-decoration:line-through}
+.qside{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.qtag{font-size:.74rem;border-radius:5px;padding:0 7px;line-height:1.6;white-space:nowrap}
+.q-goal{background:var(--accent-soft);color:var(--accent)}.q-kb{background:var(--mtg-soft);color:var(--mtg)}
+.q-idea{background:var(--warn-soft);color:var(--warn)}.q-doubt{background:var(--bad-soft);color:var(--bad)}.q-none{background:var(--oth-soft);color:var(--oth)}
+.qside .from{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.qacts{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;opacity:.55}
+.qrow:hover .qacts,.qrow:focus-within .qacts{opacity:1}
+.qacts button{border:0;background:transparent;color:var(--muted);font-size:.76rem;padding:1px 6px;border-radius:5px;white-space:nowrap}
+.qacts button:hover{background:var(--line);color:var(--ink)}
+.qacts button.sure{color:var(--bad);font-weight:600}
+.qans{border:1px solid var(--accent);background:var(--sheet);border-radius:6px;padding:1px 6px;font:inherit;font-size:.8rem;color:var(--ink);width:10em}
+.tk-out{margin:4px 0 2px;border-left:2px solid var(--accent);padding-left:6px}
+.tk-out-label{font-size:.72rem;font-weight:600;color:var(--accent);letter-spacing:.05em;padding:0 6px}
+.tk-out textarea{border:1px solid transparent;background:transparent;border-radius:6px;padding:2px 6px;font:inherit;font-size:.88rem;line-height:1.55;color:var(--ink);resize:none;overflow:hidden;width:100%;box-sizing:border-box;display:block}
+.tk-out textarea:hover,.tk-out textarea:focus{border-color:var(--line);background:var(--sheet)}
+.tk-out .tk-fmsg{padding:0 6px}
+form.tk-new{display:flex;gap:8px;flex-wrap:wrap;padding:4px 14px 16px;border-top:1px dashed var(--line);margin-top:4px;padding-top:12px}
+form.tk-new input{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 10px;font:inherit;font-size:.9rem;color:var(--ink)}
+form.tk-new input:first-child{flex:1;min-width:14em}
+form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-radius:8px;padding:0 14px;font-weight:600;font-size:.9rem}
+#tasks .done-toggle{margin:0 18px 10px}
+.foot{color:var(--muted);font-size:.8rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+</head>
+<body>
+<script>
+// Google 版数据层：把页面的 db / assets 调用接到 Google Apps Script（表格 + 云端硬盘）
+(function(){
+  const gs=(fn,...a)=>new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(e&&e.message?{code:'upstream_error',message:e.message}:e))[fn](...a));
+  const data={},subs={};let stamp='',loaded=false,pending=0,q=Promise.resolve();
+  const clone=o=>JSON.parse(JSON.stringify(o===undefined?{}:o));
+  const gid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  const snap=c=>({docs:Object.entries(data[c]||{}).map(([id,d])=>({id,data:()=>clone(d)}))});
+  const notify=c=>{(subs[c]||[]).forEach(fn=>{try{fn(snap(c))}catch(e){console.error(e)}})};
+  const notifyAll=()=>Object.keys(subs).forEach(notify);
+  async function load(){const r=await gs('listAll');stamp=r.stamp;for(const c in r.collections){data[c]={};for(const d of r.collections[c])data[c][d.id]=d.data}loaded=true;notifyAll()}
+  function enqueue(op){pending++;const p=q.then(()=>gs('write',[op])).then(s=>{stamp=s},e=>{console.error(e);showErr(e)}).finally(()=>{pending--});q=p;return p}
+  function showErr(e){const n=document.getElementById('notice');if(n){n.hidden=false;n.textContent='保存到 Google 表格失败：'+(e&&e.message||e)+'。刷新页面后再试。'}}
+  function ref(c,id){return {id,
+    set(d){(data[c]=data[c]||{})[id]=clone(d);setTimeout(()=>notify(c));return enqueue({op:'set',coll:c,id,data:clone(d)})},
+    update(p){data[c]=data[c]||{};data[c][id]=Object.assign(data[c][id]||{},clone(p));setTimeout(()=>notify(c));return enqueue({op:'update',coll:c,id,data:clone(p)})},
+    delete(){if(data[c])delete data[c][id];setTimeout(()=>notify(c));return enqueue({op:'delete',coll:c,id})}}}
+  const db={
+    collection(c){return {
+      onSnapshot(fn){(subs[c]=subs[c]||[]).push(fn);if(loaded)setTimeout(()=>fn(snap(c)));return()=>{subs[c]=subs[c].filter(x=>x!==fn)}},
+      doc(id){return ref(c,id||gid())},
+      add(d){const r=ref(c,gid());return r.set(d).then(()=>r)}}},
+    doc(path){const [c,id]=path.split('/');return ref(c,id)}
+  };
+  // 定时检查：表格被你或其他工具改过，就重新载入
+  setInterval(async()=>{if(document.hidden||pending)return;try{const s=await gs('stamp');if(s!==stamp&&!pending)await load()}catch(e){}},20000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!pending)gs('stamp').then(s=>{if(s!==stamp)load()},()=>{})});
+  async function b64(blob){const u=new Uint8Array(await blob.arrayBuffer());let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+  const assets={
+    async upload(blob,o){const id=await gs('uploadB64',blob.name||'file',(o&&o.type)||blob.type||'application/octet-stream',await b64(blob));return {id,url:'https://drive.google.com/file/d/'+id+'/view',sizeBytes:blob.size,contentType:(o&&o.type)||blob.type}},
+    async delete(id){await gs('trashFile',id);return {deleted:true}},
+    async list(){return {assets:[],usage:{}}}
+  };
+  window.__DESK={kind:'google',openHint:'点击在 Google 云端硬盘打开原文件（可用 Google 表格 / 文档打开或下载）',
+    openFile:id=>{window.open('https://drive.google.com/file/d/'+id+'/view','_blank','noopener')},
+    fileText:id=>gs('fileText',id),fileB64:id=>gs('fileB64',id),
+    uploadB64:(n,m,b)=>gs('uploadB64',n,m,b),uploadText:(n,t)=>gs('uploadText',n,t),
+    saveBackup:async(n,j)=>{const url=await gs('saveBackup',n,j);window.open(url,'_blank','noopener');return '已保存到云端硬盘'},
+    importAll:async c=>{await q;await gs('importAll',c);await load()}
+  };
+  const ready=load().catch(e=>{showErr(e)});
+  window.claude={use:async n=>{if(n==='db'){await ready;return db}if(n==='assets')return assets;if(n==='user')return {can:async()=>true,isOwner:()=>true};return null}};
+})();
+
+</script>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Sophia's Desk</h1>
+      <div class="sub">速记 · 日程与会议议题 · 月 / 周 / 日目标 · 知识库</div>
+      <nav class="tabs" aria-label="切换页面">
+        <a href="#desk" id="tab-desk" class="tab">工作台</a>
+        <a href="#kb" id="tab-kb" class="tab">知识库<span id="kb-badge" class="badge" hidden></span></a>
+        <button type="button" id="bk-export" class="tab bk">导出备份</button>
+        <button type="button" id="bk-import" class="tab bk" hidden>导入备份</button>
+        <span id="bk-msg" class="bk-msg" role="status"></span>
+      </nav>
+    </div>
+    <div class="nav" id="desk-nav" aria-label="切换日期">
+      <button class="btn" id="prev" type="button" aria-label="前一天">‹</button>
+      <div class="date" id="cur-date">—</div>
+      <button class="btn" id="next" type="button" aria-label="后一天">›</button>
+      <button class="btn" id="today" type="button">今天</button>
+      <input type="date" id="pick" aria-label="选择日期">
+      <button class="btn primary" id="open-report" type="button">生成周报</button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+  <div id="desk" class="view">
+  <section class="panel report" id="report" aria-label="周报" hidden></section>
+  <section class="panel quick" id="quick" aria-label="速记"></section>
+  <section class="panel" id="cal" aria-label="日程"></section>
+  <div class="grid" id="grid"></div>
+  <div class="foot">「顺延」会把目标移到下一个月 / 周 / 日并记录次数；之前没完成的目标、待办和存疑会显示在对应区域顶部。速记里的规则、个案、已采纳的想法、已确认的问题会进入知识库的「待整理」。</div>
+  </div>
+  <div id="kb" class="view" hidden></div>
+</div>
+
+<script>
+(function(){
+  // 独立部署时（Google 版 / 浏览器本地版）由外层提供 window.__DESK：文件读写、备份、导入
+  const HOST=window.__DESK||null;const GMODE=!!HOST;
+  async function blobText(id){return GMODE?HOST.fileText(id):(await fetch('/_blob/'+id)).text()}
+  /* ---------- 日期工具 ---------- */
+  const WD=['周日','周一','周二','周三','周四','周五','周六'];
+  const pad=n=>String(n).padStart(2,'0');
+  const dayKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const monthKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1);
+  function weekKey(d){
+    const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    const wd=t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-wd);
+    const y=t.getUTCFullYear(); const w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);
+    return y+'-W'+pad(w);
+  }
+  function mondayOf(d){const m=new Date(d.getFullYear(),d.getMonth(),d.getDate());const wd=m.getDay()||7;m.setDate(m.getDate()-wd+1);return m}
+  function weekStart(key){const [y,w]=key.split('-W').map(Number);const m=mondayOf(new Date(y,0,4));m.setDate(m.getDate()+(w-1)*7);return m}
+  function weekDays(key){const s=weekStart(key);return [...Array(7)].map((_,i)=>{const d=new Date(s);d.setDate(s.getDate()+i);return dayKey(d)})}
+  function keyFor(level,d){return level==='month'?monthKey(d):level==='week'?weekKey(d):dayKey(d)}
+  function nextKey(level,key){
+    if(level==='month'){const [y,m]=key.split('-').map(Number);return monthKey(new Date(y,m,1))}
+    if(level==='week'){const s=weekStart(key);s.setDate(s.getDate()+7);return weekKey(s)}
+    const [y,m,dd]=key.split('-').map(Number);return dayKey(new Date(y,m-1,dd+1));
+  }
+  function md(k){const [,m,d]=k.split('-').map(Number);return m+'月'+d+'日'}
+  function labelFor(level,key){
+    if(level==='month'){const [y,m]=key.split('-');return y+'年'+Number(m)+'月'}
+    if(level==='week'){const s=weekStart(key);const e=new Date(s);e.setDate(e.getDate()+6);return (s.getMonth()+1)+'月'+s.getDate()+'日 – '+(e.getMonth()+1)+'月'+e.getDate()+'日'}
+    const [y,m,dd]=key.split('-').map(Number);return m+'月'+dd+'日 '+WD[new Date(y,m-1,dd).getDay()];
+  }
+  function shortLabel(level,key){
+    if(level==='month')return Number(key.split('-')[1])+'月';
+    if(level==='week')return '第'+Number(key.split('-W')[1])+'周';
+    const [,m,dd]=key.split('-').map(Number);return m+'/'+dd;
+  }
+  const toMin=t=>{const [h,m]=String(t||'0:0').split(':').map(Number);return h*60+(m||0)};
+
+  /* ---------- 状态 ---------- */
+  const LEVELS=[{key:'day',name:'今日',unit:'日',ph:'添加今日任务…'},{key:'week',name:'本周',unit:'周',ph:'添加本周计划…'},{key:'month',name:'本月',unit:'月',ph:'添加本月目标…'}];
+  const KINDS=[{k:'meeting',n:'会议'},{k:'discussion',n:'讨论'},{k:'other',n:'其他'}];
+  const CATS=[{k:'rule',n:'规则/口径'},{k:'case',n:'Host 个案'},{k:'idea',n:'优化想法'},{k:'doubt',n:'待确认'}];
+  const PROGS=[{k:'drh',n:'Demo Room Host Program',short:'Demo Room Host'},{k:'impact',n:'Impact Affiliate',short:'Impact Affiliate'}];
+  const TRACKS=[{k:'current',n:'现行业务'},{k:'optimize',n:'待优化业务'}];
+  const TEAMS=['TS','MKT','OP'];
+  const kindName=k=>(KINDS.find(x=>x.k===k)||KINDS[2]).n;
+  const catName=k=>(CATS.find(x=>x.k===k)||{n:''}).n;
+
+  let sel=new Date(); sel.setHours(0,0,0,0);
+  let goals=[],events=[],notes=[]; let db=null; let canWrite=true; let ready=false;
+  const editing={id:null}; const confirmDel={id:null};
+  const drafts={};
+  const evForm={open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:''};
+  const ntForm={};
+  let ntFilter='all'; let reportOpen=false;
+  const $=id=>document.getElementById(id);
+  const CHECK='<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.4" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function btn(cls,text,fn,label){const b=el('button',cls,text);b.type='button';if(fn)b.onclick=fn;if(label)b.setAttribute('aria-label',label);return b}
+  // 自动增高的输入框：内容超过一行时向下伸长，完整显示
+  function fit(t){if(!t.isConnected||!t.offsetParent)return;t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'}
+  function autoGrow(t,onEnter){
+    t.rows=1;t.addEventListener('input',()=>fit(t));
+    // 统一按键：Enter 保存 / 添加；Ctrl+Enter（或 Shift+Enter）换行
+    // 所有输入框：Ctrl+Enter / Shift+Enter 换行；有保存动作的框里 Enter 保存，其他框 Enter 也是换行
+    t.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;
+      if(e.ctrlKey||e.metaKey||e.shiftKey){e.preventDefault();e.stopPropagation();t.setRangeText('\n',t.selectionStart,t.selectionEnd,'end');t.dispatchEvent(new Event('input',{bubbles:true}));return}
+      if(onEnter){e.preventDefault();onEnter()}
+    });
+    // 多重保险：渲染后、下一帧、聚焦时、宽度变化时都重新计算高度，长文始终完整显示
+    requestAnimationFrame(()=>fit(t));setTimeout(()=>fit(t),60);setTimeout(()=>fit(t),400);
+    t.addEventListener('focus',()=>fit(t));
+    if(window.ResizeObserver){let w=0;new ResizeObserver(es=>{const nw=es[0].contentRect.width;if(nw&&Math.abs(nw-w)>1){w=nw;fit(t)}}).observe(t)}
+    return t;
+  }
+  window.addEventListener('resize',()=>document.querySelectorAll('textarea[data-grow]').forEach(fit));
+  // 超过 50 字的内容：第一句作标题，其余缩略成一行，可展开
+  const expanded=new Set();
+  function splitTitle(text){
+    const t=String(text||'').trim();
+    const m=t.match(/^[\s\S]*?[。！？；!?;\n]/);
+    let head=m?m[0]:t;
+    if(head.length>40){const c=head.search(/[，,：:]/);head=c>=6&&c<=40?head.slice(0,c+1):head.slice(0,32)}
+    let rest=t.slice(head.length).trim();
+    head=head.replace(/[。；;，,：:\s]+$/,'');
+    if(!rest&&head.length<t.length)rest=t.slice(head.length).trim();
+    return {head,rest};
+  }
+  function longText(cls,text,key){
+    const t=String(text||'');
+    if(t.length<=50)return el('div',cls,t);
+    const {head,rest}=splitTitle(t);
+    const w=el('div',cls+' lt');
+    w.append(el('div','lt-title',head+(rest?'':'')));
+    if(rest){
+      const open=expanded.has(key);
+      const r=el('div','lt-rest'+(open?'':' clamp'),rest);r.id='lt-'+key;
+      const tg=btn('lt-toggle',open?'收起':'展开',()=>{open?expanded.delete(key):expanded.add(key);render()});
+      tg.setAttribute('aria-expanded',open);tg.setAttribute('aria-controls','lt-'+key);
+      const row=el('div','lt-row');row.append(r,tg);w.append(row);
+    }
+    return w;
+  }
+  function copyText(text,b){
+    const done=()=>{const o=b.textContent;b.textContent='已复制';setTimeout(()=>{b.textContent=o},1400)};
+    try{navigator.clipboard.writeText(text).then(done,()=>{})}catch(e){}
+  }
+
+  const colOff={month:0,week:0,day:0};const doneOpen={month:false,week:false};
+  function shiftKey(level,key,n){
+    if(!n)return key;
+    if(level==='month'){const [y,m]=key.split('-').map(Number);return monthKey(new Date(y,m-1+n,1))}
+    if(level==='week'){const s=weekStart(key);s.setDate(s.getDate()+7*n);return weekKey(s)}
+    const [y,m,d]=key.split('-').map(Number);return dayKey(new Date(y,m-1,d+n));
+  }
+  // 从 a 期到 b 期相差几个单位（天 / 周 / 月），用于「回到今天 / 本周 / 本月」
+  function unitsBetween(level,a,b){
+    if(level==='month'){const [y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-').map(Number);return (y2-y1)*12+(m2-m1)}
+    if(level==='week')return Math.round((weekStart(b)-weekStart(a))/(7*864e5));
+    return Math.round((parseKey(b)-parseKey(a))/864e5);
+  }
+  function setSel(d){sel=new Date(d.getFullYear(),d.getMonth(),d.getDate());if(typeof followToday!=='undefined')followToday=dayKey(sel)===dayKey(new Date());colOff.month=colOff.week=colOff.day=0;resetEv();resetNt();render()}
+  // 跨天自动翻页：停留在「今天」时，过了零点或重新打开窗口会自动切到新的一天
+  let followToday=true,lastToday=dayKey(new Date());
+  function checkDay(){
+    const t=dayKey(new Date());if(t===lastToday)return;
+    const wasToday=dayKey(sel)===lastToday;lastToday=t;
+    if(followToday||wasToday)setSel(new Date());else render();
+  }
+  setInterval(checkDay,30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDay()});
+  window.addEventListener('focus',checkDay);
+  $('prev').onclick=()=>{followToday=false;const d=new Date(sel);d.setDate(d.getDate()-1);setSel(d)};
+  $('next').onclick=()=>{followToday=false;const d=new Date(sel);d.setDate(d.getDate()+1);setSel(d)};
+  $('today').onclick=()=>{followToday=true;setSel(new Date())};
+  $('pick').onchange=e=>{if(e.target.value){followToday=e.target.value===dayKey(new Date());const [y,m,d]=e.target.value.split('-').map(Number);setSel(new Date(y,m-1,d))}};
+  /* ---------- 备份：导出全部数据（含附件）/ 在 Google 版导入 ---------- */
+  let kbmetaDocs={};
+  const bkMsg=(t)=>{const m=$('bk-msg');if(m)m.textContent=t||''};
+  function allFileRecs(){const out=[];for(const t of tasks){for(const f of t.bgFiles||[])out.push(f);for(const it of tkItems(t))for(const f of it.files||[])out.push(f)}return out}
+  const strip=a=>a.map(x=>Object.assign({},x));
+  let bkReady=null;
+  async function saveReady(){
+    const {name,json,miss}=bkReady;
+    try{
+      const dl=downloadsFn||await claude.use('downloads');if(!dl){bkMsg('这个视图不能下载文件，请在浏览器里打开 Desk 再试');return}
+      await dl.save({filename:name,data:new Blob([json],{type:'application/json'})});
+      bkReady=null;$('bk-export').textContent='导出备份';bkMsg('已导出'+(miss?'（'+miss+' 个附件没取到）':''));
+    }catch(e){const c=e&&e.code;bkMsg(c==='declined'?'已取消，可以再点一次':c==='rate_limited'?'上一个保存提示还没关，请先处理它':'下载没成功（'+(c||e&&e.message||'未知原因')+'），可以再点一次')}
+  }
+  async function exportAll(){
+    if(bkReady&&!GMODE)return saveReady();
+    if(!db){bkMsg('数据还没加载，稍后再试');return}
+    bkMsg('正在打包…');
+    const data={app:"Sophia's Desk",format:1,source:GMODE?'google':'claude',exportedAt:new Date().toISOString(),
+      collections:{goals:strip(goals),events:strip(events),notes:strip(notes),kb_items:strip(kbItems),tasks:strip(tasks),kbmeta:Object.entries(kbmetaDocs).map(([id,d])=>Object.assign({id},d))},files:{}};
+    let miss=0;
+    for(const f of allFileRecs()){
+      try{
+        if(f.oid&&!data.files[f.oid])data.files[f.oid]=GMODE?{b64:await HOST.fileB64(f.oid)}:{b64:(await blobText(f.oid)).trim()};
+        if(f.aid&&!data.files[f.aid]){if(f.kind==='doc'||f.kind==='sheet')data.files[f.aid]={text:await blobText(f.aid)};else data.files[f.aid]=GMODE?{b64:await HOST.fileB64(f.aid)}:{b64:await blobToB64(await (await fetch('/_blob/'+f.aid)).blob())}}
+      }catch(e){miss++}
+    }
+    const json=JSON.stringify(data);const name='sophias-desk-backup-'+todayKey()+'.json';
+    try{
+      if(GMODE){const msg=await HOST.saveBackup(name,json);bkMsg((msg||'已导出')+(miss?'（'+miss+' 个附件没取到）':''));return}
+      // 打包要花几秒，浏览器只允许在点击后立刻弹出保存，所以打包好之后请再点一次
+      bkReady={name,json,miss};$('bk-export').textContent='下载备份文件';bkMsg('已打包好'+(miss?'（'+miss+' 个附件没取到）':'')+'，点「下载备份文件」保存');
+    }catch(e){bkMsg('导出没成功（'+(e&&(e.code||e.message)||'未知原因')+'）')}
+  }
+  async function blobToB64(b){return toB64(b)}
+  async function importAll(){
+    if(!GMODE)return;
+    const i=el('input');i.type='file';i.accept='.json,application/json';i.style.display='none';document.body.append(i);
+    i.onchange=async()=>{const f=i.files[0];i.remove();if(!f)return;
+      let data;try{data=JSON.parse(await f.text())}catch(e){bkMsg('这个文件不是 Desk 的备份');return}
+      if(!data||!data.collections){bkMsg('这个文件不是 Desk 的备份');return}
+      if(!confirmImport){confirmImport=data;bkMsg('导入会覆盖这里现有的全部数据。再点一次「导入备份」确认');return}
+      await doImport(data);
+    };
+    if(confirmImport){const d=confirmImport;confirmImport=null;i.remove();await doImport(d);return}
+    i.click();
+  }
+  let confirmImport=null;
+  async function doImport(data){
+    bkMsg('正在导入…');const map={};let n=0;
+    const files=data.files||{};
+    const recs=[];for(const t of data.collections.tasks||[]){for(const f of t.bgFiles||[])recs.push(f);for(const it of t.items||[])for(const f of it.files||[])recs.push(f)}
+    for(const r of recs){
+      for(const k of ['oid','aid']){const old=r[k];if(!old)continue;
+        if(!map[old]&&files[old]){
+          try{
+            const fx=files[old];const e=extOf(r.name);
+            if(fx.text!=null)map[old]=await HOST.uploadText(r.name+'.preview.json',fx.text);
+            else map[old]=await HOST.uploadB64(r.name,(k==='oid'?OFFICE_MIME[e]:FTYPES[e])||'application/octet-stream',fx.b64);
+            n++;bkMsg('正在导入附件 '+n+'…');
+          }catch(e){}
+        }
+        if(map[old])r[k]=map[old];else delete r[k];
+      }
+    }
+    try{await HOST.importAll(data.collections);bkMsg('导入完成，共 '+n+' 个附件');}catch(e){bkMsg('导入没成功：'+(e&&e.message||e))}
+  }
+  $('bk-export').onclick=exportAll;
+  if(GMODE){$('bk-import').hidden=false;$('bk-import').onclick=importAll}
+  $('open-report').onclick=()=>{reportOpen=!reportOpen;render();if(reportOpen)$('report').scrollIntoView({block:'nearest'})};
+
+  function fail(err){
+    if(err&&err.code==='invalid_argument'){canWrite=false;render();return}
+    const n=$('notice');n.hidden=false;n.textContent=err&&err.code==='quota_exceeded'?'存储已满，删除一些旧记录后再添加。':'保存失败，请稍后再试。';
+  }
+  async function put(coll,id,patch){try{await db.doc(coll+'/'+id).update(patch)}catch(e){fail(e)}}
+  async function del(coll,id){try{await db.doc(coll+'/'+id).delete()}catch(e){fail(e)}}
+  async function create(coll,data){try{await db.collection(coll).add(Object.assign({createdAt:Date.now()},data))}catch(e){fail(e)}}
+
+  function render(){
+    const fid=document.activeElement&&document.activeElement.id;
+    $('cur-date').textContent=(sel.getMonth()+1)+'月'+sel.getDate()+'日 '+WD[sel.getDay()];
+    $('pick').value=dayKey(sel);
+    $('open-report').textContent=reportOpen?'收起周报':'生成周报';
+    const isKB=view==='kb';
+    $('desk').hidden=isKB;$('kb').hidden=!isKB;$('desk-nav').hidden=isKB;
+    $('tab-desk').classList.toggle('on',!isKB);$('tab-kb').classList.toggle('on',isKB);
+    $('tab-desk').setAttribute('aria-current',isKB?'false':'page');$('tab-kb').setAttribute('aria-current',isKB?'page':'false');
+    const pc=pendingNotes().length;const bd=$('kb-badge');bd.hidden=!pc;bd.textContent=pc?String(pc):'';
+    renderNotice();
+    if(isKB){renderKB()}else{renderReport();renderQuick();renderCal();renderGoals()}
+    if(fid){const e=$(fid);if(e&&e!==document.activeElement)e.focus()}
+  }
+
+  function renderNotice(){
+    const notice=$('notice');
+    const hasEx=[...goals,...events,...notes].some(x=>x.example);
+    if(!db&&ready){notice.hidden=false;notice.textContent='数据暂时无法加载，请登录后刷新页面。'}
+    else if(hasEx&&canWrite){
+      notice.hidden=false;notice.textContent='';
+      notice.append(el('span',null,'当前显示的是示例内容。把你的日程、目标和记录发给 Claude，或直接在页面里添加。'));
+      notice.append(btn(null,'清除示例',clearExamples));
+    } else notice.hidden=true;
+  }
+  async function clearExamples(){
+    for(const g of goals.filter(x=>x.example))await del('goals',g.id);
+    for(const e of events.filter(x=>x.example))await del('events',e.id);
+    for(const n of notes.filter(x=>x.example))await del('notes',n.id);
+  }
+
+  /* ---------- 日程 ---------- */
+  // 每周重复：从首次日期开始，之后每个同一星期几都出现（except 里的日期除外）
+  function occursOn(e,k){
+    if((e.except||[]).includes(k))return false;
+    if(e.date===k)return true;
+    if((e.repeat!=='weekly'&&e.repeat!=='biweekly')||!e.date||k<e.date)return false;
+    const days=Math.round((parseKey(k)-parseKey(e.date))/864e5);
+    return days%(e.repeat==='biweekly'?14:7)===0;
+  }
+  // 时间输入：下拉提供每半小时的选项，也可以直接输入任意时间（10:05、1005、10.05、9:5 都可以）
+  function normTime(v){
+    const t=String(v||'').trim().replace(/[：.。]/g,':');
+    let m=t.match(/^(\d{1,2}):(\d{1,2})$/)||t.match(/^(\d{1,2})(\d{2})$/)||t.match(/^(\d{1,2})$/);
+    if(!m)return '';
+    const h=+m[1],mi=m[2]!=null?+m[2]:0;
+    if(h>23||mi>59)return '';
+    return pad(h)+':'+pad(mi);
+  }
+  function timeField(label,id,key){
+    const l=el('label','fld half');l.append(label);
+    const i=el('input');i.id=id;i.type='text';i.inputMode='numeric';i.setAttribute('role','combobox');i.setAttribute('aria-expanded','false');i.autocomplete='off';i.placeholder='如 10:05';i.maxLength=5;i.value=evForm[key];
+    i.oninput=()=>{evForm[key]=i.value};
+    i.onblur=()=>{const n=normTime(i.value);if(n){i.value=n;evForm[key]=n;
+      if(key==='start'&&(!normTime(evForm.end)||toMin(evForm.end)<=toMin(n))){const e=Math.min(toMin(n)+60,23*60+59);evForm.end=pad(Math.floor(e/60))+':'+pad(e%60);const ei=$('ev-end');if(ei)ei.value=evForm.end}}};
+    // 自定义下拉：每半小时一个选项，点选即填入；也可以继续手动输入
+    const wrap=el('div','tsel');const pop=el('div','tpop');pop.hidden=true;pop.setAttribute('role','listbox');
+    const commit=v=>{i.value=v;evForm[key]=v;hide();i.dispatchEvent(new Event('blur'));};
+    for(let m=7*60;m<=22*60;m+=30){const v=pad(Math.floor(m/60))+':'+pad(m%60);const o=btn('topt',v);o.setAttribute('role','option');o.tabIndex=-1;
+      o.addEventListener('mousedown',e=>{e.preventDefault();commit(v)});pop.append(o)}
+    const show=()=>{pop.hidden=false;i.setAttribute('aria-expanded','true');
+      const cur=toMin(normTime(i.value)||'09:00');let best=null,d=1e9;for(const o of pop.children){const dd=Math.abs(toMin(o.textContent)-cur);o.classList.toggle('on',o.textContent===normTime(i.value));if(dd<d){d=dd;best=o}}
+      if(best)pop.scrollTop=best.offsetTop-pop.clientHeight/2+best.offsetHeight/2};
+    function hide(){pop.hidden=true;i.setAttribute('aria-expanded','false')}
+    i.addEventListener('focus',show);i.addEventListener('click',show);
+    i.addEventListener('blur',()=>setTimeout(hide,120));
+    i.addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Enter'||e.key==='Tab')hide()});
+    wrap.append(i,pop);l.append(wrap);return l;
+  }
+  function resetEv(){Object.assign(evForm,{open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:''})}
+  const calUI={topic:{},hist:{}};
+  function topicFor(e,dk){return tasks.find(t=>t.eventId===e.id&&t.evDate===dk)}
+  function linkedEvent(t){if(!t.eventId)return null;const e=events.find(x=>x.id===t.eventId);return e&&occursOn(e,t.evDate)?e:null}
+  async function createTopic(e,dk){
+    if(!db)return;const ref=db.collection('tasks').doc();calUI.topic[e.id+'|'+dk]=true;
+    try{await ref.set({title:e.title,due:dk,eventId:e.id,evDate:dk,bg:'',items:[],archived:false,createdAt:Date.now(),updatedAt:Date.now()})}catch(err){fail(err)}
+    setTimeout(()=>{const x=$('tk-bg-'+ref.id);if(x)x.focus()},300);
+  }
+  function renderCal(){
+    const box=$('cal');box.textContent='';
+    const dk=dayKey(sel); const tdk=dayKey(new Date());
+    const list=events.filter(e=>occursOn(e,dk)).sort((a,b)=>toMin(a.start)-toMin(b.start));
+    const head=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title','日程'),el('div','range',labelFor('day',dk)));
+    const sum=el('div','sum');
+    for(const K of KINDS){const n=list.filter(e=>(e.kind||'other')===K.k).length;if(n){const s=el('span');s.append(K.n+' ',el('b',null,String(n)),' 项');sum.append(s)}}
+    if(!list.length)sum.append(el('span',null,'当天无安排'));
+    head.append(hl,sum);box.append(head);
+
+    const wk=el('div','wk');const mon=mondayOf(sel);
+    for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);const k=dayKey(d);
+      const n=events.filter(x=>occursOn(x,k)).length;const nt=tasks.filter(t=>(t.evDate||t.due)===k&&tkItems(t).length).length;
+      const b=btn((k===dk?'on':'')+(k===tdk?' today':''),null,()=>setSel(d),labelFor('day',k)+(n?'，'+n+' 项日程':''));
+      b.append(el('span','wd',WD[d.getDay()]),el('span','dn',String(d.getDate())),el('span','n',n?n+' 项'+(nt?' · 议题':''):(nt?'议题':'')));
+      wk.append(b)}
+    box.append(wk);
+
+    if(list.length){
+      const ul=el('ul','agenda');const now=new Date();const nm=now.getHours()*60+now.getMinutes();
+      for(const e of list){
+        let cls='ag';if(dk===tdk){if(toMin(e.end)<=nm)cls+=' past';else if(toMin(e.start)<=nm)cls+=' live'}
+        if(dk<tdk)cls+=' past';
+        const li=el('li',cls);
+        const tm=el('div','tm',e.start);tm.append(el('small',null,'至 '+e.end));
+        const w=el('div','what');
+        const t1=el('div');t1.style.display='flex';t1.style.gap='8px';t1.style.flexWrap='wrap';t1.style.alignItems='center';
+        t1.append(el('span','ttl',e.title),el('span','kind k-'+(e.kind||'other'),kindName(e.kind)));
+        if(e.repeat==='weekly'||e.repeat==='biweekly')t1.append(el('span','chip src',(e.repeat==='biweekly'?'每两周':'每')+WD[parseKey(e.date).getDay()]));
+        if(e.example)t1.append(el('span','chip ex','示例'));
+        w.append(t1);
+        const info=el('div','info');
+        if(e.mno){const s=el('span');s.append('会议号 ',el('span','mno',e.mno));s.append(btn('copy','复制',ev=>copyText(e.mno,ev.currentTarget),'复制会议号'));info.append(s)}
+        if(e.place)info.append(el('span',null,'地点 '+e.place));
+        if(info.childNodes.length)w.append(info);
+        const tp=topicFor(e,dk);const tkey=e.id+'|'+dk;
+        const topicOpen=tp&&(calUI.topic[tkey]!=null?calUI.topic[tkey]:dk>=tdk);
+        if(tp){const n=tkItems(tp).length;w.append(btn('tp-toggle'+(topicOpen?' on':''),(topicOpen?'▾ ':'▸ ')+'会议议题 · '+(n?n+' 项':'未填写')+(tp.bg&&tp.bg.trim()?' · 有背景':''),()=>{calUI.topic[tkey]=!topicOpen;render()}))}
+        else if(canWrite&&db&&tasksReady&&(e.kind||'other')!=='other')w.append(btn('tp-toggle add','＋ 准备会议议题',()=>createTopic(e,dk)));
+        // 循环会议：历史议题
+        const recurring=e.repeat==='weekly'||e.repeat==='biweekly';
+        const hist=recurring?tasks.filter(t=>t.eventId===e.id&&t.evDate&&t.evDate!==dk).sort((a,b)=>a.evDate<b.evDate?1:-1):[];
+        const hs=calUI.hist[tkey]||{};
+        if(hist.length){
+          const tb=w.querySelector('.tp-toggle');const hb=btn('tp-toggle hist'+(hs.open?' on':''),(hs.open?'▾ ':'▸ ')+'历史议题 '+hist.length,()=>{calUI.hist[tkey]=Object.assign({},hs,{open:!hs.open});render()},'查看这个循环会议以前的议题');
+          if(tb){const row=el('div','tp-row');tb.replaceWith(row);row.append(tb,hb)}else w.append(hb);
+        }
+        const acts=el('div','row-acts');
+        if(canWrite&&db){
+          acts.append(btn(null,'编辑',()=>{Object.assign(evForm,{open:true,id:e.id,title:e.title,kind:e.kind||'other',start:e.start,end:e.end,mno:e.mno||'',place:e.place||'',repeat:e.repeat||'',err:''});render();const t=$('ev-title');if(t)t.focus()}));
+          if(e.repeat==='weekly'||e.repeat==='biweekly'){
+            if(confirmDel.id===e.id){
+              acts.append(btn('sure','只删这一次',()=>{confirmDel.id=null;put('events',e.id,{except:[...(e.except||[]),dk]})}));
+              acts.append(btn('sure','删除全部',()=>{confirmDel.id=null;if(evForm.id===e.id)resetEv();del('events',e.id)}));
+              acts.append(btn(null,'取消',()=>{confirmDel.id=null;render()}));
+            } else acts.append(btn(null,'删除',()=>{confirmDel.id=e.id;render()}));
+          } else acts.append(btn(confirmDel.id===e.id?'sure':null,confirmDel.id===e.id?'确认删除':'删除',()=>{if(confirmDel.id===e.id){confirmDel.id=null;if(evForm.id===e.id)resetEv();del('events',e.id)}else{confirmDel.id=e.id;render()}}));
+        }
+        li.append(tm,w,acts);
+        if(hist.length&&hs.open){
+          const hw=el('div','ag-hist');
+          const hd=el('div','hist-hd');hd.append(el('span','hist-label','历史议题'));
+          const pick=el('input');pick.type='date';pick.className='hist-pick';pick.setAttribute('aria-label','按日期查找历史议题');pick.max=dk;
+          const chosen=hist.find(t=>t.id===hs.sel);if(chosen)pick.value=chosen.evDate;
+          pick.onchange=()=>{const v=pick.value;if(!v)return;const exact=hist.find(t=>t.evDate===v);const near=exact||hist.reduce((b,t)=>!b||Math.abs(parseKey(t.evDate)-parseKey(v))<Math.abs(parseKey(b.evDate)-parseKey(v))?t:b,null);calUI.hist[tkey]=Object.assign({},hs,{open:true,sel:near.id,miss:exact?null:v});render()};
+          hd.append(pick);hw.append(hd);
+          const chips=el('div','hist-chips');
+          for(const t of hist){
+            const its=tkItems(t);const first=(t.bg&&t.bg.trim())||(its[0]&&its[0].text)||'';
+            const c=btn('hist-chip'+(hs.sel===t.id?' on':''),null,()=>{calUI.hist[tkey]=Object.assign({},hs,{open:true,sel:hs.sel===t.id?null:t.id,miss:null});render()});
+            c.append(el('span','hd',shortLabel('day',t.evDate)+' '+WD[parseKey(t.evDate).getDay()]),el('span','hn',its.length+' 项'));
+            if(first)c.append(el('span','hp',first.split('\n')[0].slice(0,28)));
+            chips.append(c);
+          }
+          hw.append(chips);
+          if(hs.miss)hw.append(el('div','tk-fmsg',shortLabel('day',hs.miss)+' 没有议题，已为你选中最近的一次'));
+          if(chosen){const cw=el('div','hist-card');cw.append(el('div','hist-label',labelFor('day',chosen.evDate)+' 的议题'),renderTask(chosen,true));hw.append(cw)}
+          li.append(hw);
+        }
+        if(tp&&topicOpen){const tw=el('div','ag-topic');tw.append(renderTask(tp,true));li.append(tw)}
+        ul.append(li);
+      }
+      box.append(ul);
+    }
+    // 没有对应日程的议题（日程被删、或旧的议题卡）：放在当天下面，可以关联到当天的会议
+    const loose=tasks.filter(t=>!linkedEvent(t)&&(t.evDate||t.due)===dk);
+    for(const t of loose){
+      const lw=el('div','loose-topic');
+      const hd=el('div','loose-hd');hd.append(el('span','ttl',t.title||'会议议题'),el('span','chip due','未关联日程'));
+      const cands=list.filter(e=>(e.kind||'other')!=='other'&&!topicFor(e,dk));
+      if(canWrite&&db&&cands.length){const sl=el('select','loose-sel');sl.setAttribute('aria-label','关联到当天的会议');sl.append(new Option('关联到会议…',''));for(const e of cands)sl.append(new Option(e.start+' '+e.title,e.id));sl.onchange=()=>{if(sl.value){t.eventId=sl.value;t.evDate=dk;tkSave(t,{eventId:sl.value,evDate:dk,archived:false});render()}};hd.append(sl)}
+      lw.append(hd,renderTask(t,true));box.append(lw);
+    }
+    const undated=tasks.filter(t=>!linkedEvent(t)&&!(t.evDate||t.due)&&!t.archived);
+    if(undated.length&&dk===tdk){for(const t of undated){const lw=el('div','loose-topic');const hd=el('div','loose-hd');hd.append(el('span','ttl',t.title||'会议议题'),el('span','chip due','未定日期'));lw.append(hd,renderTask(t,true));box.append(lw)}}
+    if(!(canWrite&&db))return;
+    if(!evForm.open){box.append(btn('add-toggle','+ 添加日程到 '+md(dk),()=>{evForm.open=true;render();const t=$('ev-title');if(t)t.focus()}));return}
+
+    const f=el('form','form');f.noValidate=true;
+    const mk=(label,id,val,set,opt={})=>{const l=el('label','fld '+(opt.cls||''));l.append(label);const i=el('input');i.id=id;i.value=val;if(opt.type)i.type=opt.type;if(opt.ph)i.placeholder=opt.ph;if(opt.step)i.step=opt.step;i.maxLength=120;i.oninput=()=>set(i.value);l.append(i);return l};
+    f.append(mk('内容','ev-title',evForm.title,v=>evForm.title=v,{cls:'span3',ph:'例如：产品周会'}));
+    const kf=el('div','fld span3');kf.append('类型');const ks=el('div','chips');
+    for(const K of KINDS){const b=btn((evForm.kind===K.k?'on ':'')+'k-'+K.k,K.n,()=>{evForm.kind=K.k;render()});b.id='ev-kind-'+K.k;b.setAttribute('aria-pressed',evForm.kind===K.k);ks.append(b)}
+    kf.append(ks);f.append(kf);
+    f.append(timeField('开始','ev-start','start'));
+    f.append(timeField('结束','ev-end','end'));
+    f.append(mk('会议号（选填）','ev-mno',evForm.mno,v=>evForm.mno=v,{cls:'span2',ph:'例如：123 456 789'}));
+    f.append(mk('地点（选填）','ev-place',evForm.place,v=>evForm.place=v,{cls:'span2',ph:'例如：3 楼会议室 / 线上'}));
+    {const editing=evForm.id&&events.find(x=>x.id===evForm.id);const base=editing?editing.date:dk;const wd=WD[parseKey(base).getDay()];
+     const row=el('div','span6 rep-row');
+     for(const [k,label] of [['weekly','每周重复（每'+wd+'同一时间）'],['biweekly','每两周重复（隔周'+wd+'同一时间）']]){
+       const rl=el('label','chk-line');const rc=el('input');rc.type='checkbox';rc.id='ev-repeat-'+k;rc.checked=evForm.repeat===k;
+       rc.onchange=()=>{evForm.repeat=rc.checked?k:'';render()};rl.append(rc,label);row.append(rl)}
+     f.append(row)}
+    const acts=el('div','form-acts span6');
+    const sb=el('button','primary',evForm.id?'保存修改':'添加到 '+md(dk));sb.type='submit';acts.append(sb);
+    acts.append(btn(null,'取消',()=>{resetEv();render()}));
+    if(evForm.err)acts.append(el('span','err',evForm.err));
+    f.append(acts);
+    f.onsubmit=e=>{
+      e.preventDefault();
+      const title=evForm.title.trim();
+      if(!title){evForm.err='请填写日程内容。';render();return}
+      evForm.start=normTime(evForm.start)||evForm.start;evForm.end=normTime(evForm.end)||evForm.end;
+      if(!normTime(evForm.start)||!normTime(evForm.end)){evForm.err='时间格式不对，请输入如 10:05 或 1005。';render();return}
+      if(toMin(evForm.end)<=toMin(evForm.start)){evForm.err='结束时间需要晚于开始时间。';render();return}
+      const data={title,kind:evForm.kind,start:evForm.start,end:evForm.end,mno:evForm.mno.trim(),place:evForm.place.trim(),repeat:evForm.repeat||''};
+      const id=evForm.id;resetEv();render();
+      if(id)put('events',id,data);else create('events',Object.assign({date:dk},data));
+    };
+    box.append(f);
+  }
+
+  /* ---------- 目标 ---------- */
+  function moveTo(g,period){put('goals',g.id,{period,delays:(g.delays||0)+1,origin:g.origin||g.period,history:[...(g.history||[]),g.period],order:Date.now()})}
+  /* 每日固定目标：模板存在 kbmeta/routines，勾选后才在 goals 里写一条当天记录 */
+  // 固定（循环）目标：日（工作日 / 每天）、周（每周）、月（每月）
+  let routines=[];const rtUI={open:{},text:{},confirm:null};const addRep={day:'',week:'',month:''};
+  const rtLevel=r=>r.level||'day';
+  const RT_OPTS={day:[['','不循环'],['weekdays','工作日固定'],['all','每天固定']],week:[['','不循环'],['weekly','每周固定'],['biweekly','每两周固定']],month:[['','不循环'],['monthly','每月固定']]};
+  function rtLabel(r){const l=rtLevel(r);return l==='week'?(r.every===2?'每两周固定':'每周固定'):l==='month'?'每月固定':r.days==='all'?'每日固定':'工作日固定'}
+  function routinesFor(key,level){
+    level=level||'day';
+    const wd=level==='day'?parseKey(key).getDay():0;
+    return routines.filter(r=>rtLevel(r)===level&&(!r.since||key>=r.since)&&(!r.until||key<=r.until)&&(level!=='day'||r.days==='all'||(wd>=1&&wd<=5))&&!(r.skip||[]).includes(key)&&(level!=='week'||r.every!==2||!r.since||unitsBetween('week',r.since,key)%2===0)).map(r=>{
+      const id='r-'+r.id+'-'+key;const doc=goals.find(g=>g.id===id);
+      return Object.assign({id,level,period:key,title:r.title,status:'todo',routine:r.id,order:-1},doc||{},{title:r.title});
+    });
+  }
+  async function toggleRoutine(g,key){
+    const d=g.status==='done';
+    try{await db.doc('goals/'+g.id).set({level:g.level||'day',period:key,title:g.title,status:d?'todo':'done',doneAt:d?null:Date.now(),routine:g.routine,order:-1,createdAt:g.createdAt||Date.now()})}catch(e){fail(e)}
+  }
+  async function skipRoutine(g){
+    await saveRoutines(routines.map(x=>x.id===g.routine?Object.assign({},x,{skip:[...(x.skip||[]),g.period]}):x));
+    if(goals.some(x=>x.id===g.id))await del('goals',g.id);
+  }
+  async function removeRoutine(rid){
+    await saveRoutines(routines.filter(x=>x.id!==rid));
+    for(const x of goals.filter(x=>x.routine===rid))await del('goals',x.id);
+    for(const n of notes.filter(n=>n.routineId===rid))await put('notes',n.id,{routineId:''});
+  }
+  function r2hint(lv){return '改文字会同步到这个固定目标的每一期'}
+  async function saveGoalEdit(g,L,rt,title,rep,curRep){
+    if(!rt){
+      if(!rep){if(title!==g.title)put('goals',g.id,{title});else render();return}
+      await makeRoutine(Object.assign({},g,{title}),L,rep);return;
+    }
+    // 固定目标
+    if(!rep){
+      // 停止循环：从这一期起不再自动出现，这一期保留为普通目标，之前各期的记录不动
+      const until=shiftKey(L.key,g.period,-1);
+      await saveRoutines(routines.map(x=>x.id===rt.id?Object.assign({},x,{until,title}):x));
+      try{await db.doc('goals/'+g.id).delete().catch(()=>{});await db.collection('goals').add({level:L.key,period:g.period,title,status:g.status==='done'?'done':'todo',doneAt:g.doneAt||null,delays:0,origin:g.period,history:[],order:Date.now(),createdAt:Date.now()})}catch(e){fail(e)}
+      return;
+    }
+    const patch={};if(title!==rt.title)patch.title=title;if(L.key==='day'&&rep!==curRep)patch.days=rep;if(L.key==='week'&&rep!==curRep)patch.every=rep==='biweekly'?2:1;
+    if(Object.keys(patch).length){
+      await saveRoutines(routines.map(x=>x.id===rt.id?Object.assign({},x,patch):x));
+      if(patch.title&&goals.some(x=>x.id===g.id))put('goals',g.id,{title});
+    } else render();
+  }
+  // 把一条普通目标改成固定目标：从这一期开始循环，本期的完成状态保留
+  async function makeRoutine(g,L,rep){
+    const rid='rt'+Date.now().toString(36);
+    const r={id:rid,title:g.title,level:L.key,since:g.period};if(L.key==='day')r.days=rep==='all'?'all':'weekdays';if(rep==='biweekly')r.every=2;
+    await saveRoutines([...routines,r]);
+    try{await db.doc('goals/r-'+rid+'-'+g.period).set({level:L.key,period:g.period,title:g.title,status:g.status==='done'?'done':'todo',doneAt:g.doneAt||null,routine:rid,order:-1,createdAt:Date.now()});await db.doc('goals/'+g.id).delete()}catch(e){fail(e)}
+  }
+  async function saveRoutines(items){try{await db.doc('kbmeta/routines').set({items})}catch(e){fail(e)}}
+  function renderRoutineMgr(L){
+    const lv=L.key;const mine=routines.filter(r=>rtLevel(r)===lv);const nm={day:'每日',week:'每周',month:'每月'}[lv];
+    const w=el('div','rt-mgr');
+    if(!rtUI.open[lv]){if(mine.length)w.append(btn('linkish','管理'+nm+'固定目标（'+mine.length+'）',()=>{rtUI.open[lv]=true;render()}));return w}
+    w.append(el('div','form-title',nm+'固定目标'));
+    w.append(el('div','hint',lv==='day'?'会自动出现在每天的目标里，每天单独勾选完成；没完成的不会顺延到第二天。':'会自动出现在每'+(lv==='week'?'周':'月')+'的目标里，每'+(lv==='week'?'周':'月')+'单独勾选完成；没完成的不会顺延。'));
+    const ul=el('ul','rt-list');
+    for(const r of mine){
+      const li=el('li');li.append(el('span','t',r.title));
+      if(lv==='day')li.append(btn('rt-days',r.days==='all'?'每天':'工作日',()=>saveRoutines(routines.map(x=>x.id===r.id?Object.assign({},x,{days:x.days==='all'?'weekdays':'all'}):x)),'切换为'+(r.days==='all'?'仅工作日':'每天')));
+      li.append(btn(rtUI.confirm===r.id?'rm sure':'rm',rtUI.confirm===r.id?'确认删除':'删除',()=>{if(rtUI.confirm===r.id){rtUI.confirm=null;saveRoutines(routines.filter(x=>x.id!==r.id))}else{rtUI.confirm=r.id;render()}}));
+      ul.append(li);
+    }
+    if(!mine.length)ul.append(el('li','hint','还没有固定目标。'));
+    w.append(ul);
+    w.append(btn('linkish','收起',()=>{rtUI.open[lv]=false;rtUI.confirm=null;render()}));
+    return w;
+  }
+  function renderGoals(){
+    const grid=$('grid');grid.textContent='';
+    for(const L of LEVELS){
+      const off=colOff[L.key]||0;
+      const key=shiftKey(L.key,keyFor(L.key,sel),off);
+      const nowKey=keyFor(L.key,new Date());
+      const title=key===nowKey?L.name:L.key==='week'&&key===shiftKey('week',nowKey,-1)?'上周':L.key==='week'&&key===shiftKey('week',nowKey,1)?'下周':L.key==='month'?shortLabel('month',key)+(key.slice(0,4)!==nowKey.slice(0,4)?'（'+key.slice(0,4)+'）':''):L.key==='week'?shortLabel('week',key):shortLabel('day',key)+' '+WD[parseKey(key).getDay()];
+      const mine=goals.filter(g=>g.level===L.key&&g.period===key).sort((a,b)=>(a.status==='done')-(b.status==='done')||(a.order||0)-(b.order||0));
+      {const rt=routinesFor(key,L.key);const rest=mine.filter(g=>!g.routine);mine.length=0;mine.push(...rt,...rest)}
+      const left=goals.filter(g=>g.level===L.key&&g.period<key&&g.status!=='done'&&!g.routine).sort((a,b)=>a.period<b.period?-1:1);
+      const done=mine.filter(g=>g.status==='done').length;
+      const pct=mine.length?Math.round(done/mine.length*100):0;
+      const s=el('section','sheet lv-'+L.key);s.setAttribute('aria-label',L.name+'目标');
+      const h=el('div','sheet-head');
+      const r1=el('div','label-row');const lv=el('div');lv.append(el('div','lvl',title),el('div','range',labelFor(L.key,key)));
+      const pager=el('div','pager');
+      const unitName={month:'月',week:'周',day:'天'}[L.key];
+      pager.append(btn('pg','‹',()=>{colOff[L.key]=off-1;render()},'上一'+(L.key==='day'?'天':unitName)));
+      if(key!==nowKey)pager.append(btn('pg now',L.name.replace('今日','今天'),()=>{colOff[L.key]=unitsBetween(L.key,keyFor(L.key,sel),nowKey);render()},'回到'+L.name));
+      pager.append(btn('pg','›',()=>{colOff[L.key]=off+1;render()},'下一'+(L.key==='day'?'天':unitName)));
+      r1.append(lv,pager);
+      const pr=el('div','prog');const bar=el('div','bar');const fill=el('i');fill.style.width=pct+'%';bar.append(fill);
+      pr.append(el('div','pct',mine.length?pct+'%':'—'),bar,el('div','count',done+' / '+mine.length));
+      h.append(r1,pr);s.append(h);
+      if(left.length){
+        const c=el('div','carry');c.append(el('div','carry-title','之前未完成 · '+left.length+' 项'));
+        for(const g of left){const row=el('div','carry-row');row.append(el('span','t',g.title),el('span','from',shortLabel(L.key,g.period)));
+          if(canWrite&&db)row.append(btn(null,'顺延到'+L.name,()=>moveTo(g,key)));c.append(row)}
+        s.append(c);
+      }
+      if(!mine.length)s.append(el('div','empty',ready?'这一'+L.unit+'还没有目标'+(canWrite&&db?'，在下方添加。':'。'):'正在加载…'));
+      else{
+        const ul=el('ul','items');
+        // 本周 / 本月：已完成的折叠起来，只露出还要做的
+        const fold=L.key!=='day';
+        const doneList=fold?mine.filter(g=>g.status==='done'):[];
+        const visible=fold&&!doneOpen[L.key]?mine.filter(g=>g.status!=='done'):mine;
+        for(const g of visible){
+          const li=el('li','item'+(g.status==='done'?' done':''));
+          const ck=btn('chk',null,()=>{const d=g.status==='done';if(g.routine){toggleRoutine(g,key);return}put('goals',g.id,{status:d?'todo':'done',doneAt:d?null:Date.now()});if(g.noteId&&notes.some(n=>n.id===g.noteId))put('notes',g.noteId,{done:!d,doneAt:d?null:Date.now()})},(g.status==='done'?'标记为未完成：':'标记为完成：')+g.title);
+          ck.innerHTML=CHECK;ck.disabled=!(canWrite&&db);
+          let main;
+          if(editing.id===g.id){
+            const rt=g.routine?routines.find(r=>r.id===g.routine):null;
+            const curRep=rt?(L.key==='day'?(rt.days==='all'?'all':'weekdays'):L.key==='week'?(rt.every===2?'biweekly':'weekly'):'monthly'):'';
+            if(editing.rep==null)editing.rep=curRep;
+            main=el('div','edit-box');
+            const ta=el('textarea','edit-in');ta.id='edit-'+g.id;ta.value=editing.text!=null?editing.text:g.title;ta.dataset.grow='1';ta.oninput=()=>{editing.text=ta.value};
+            const row=el('div','edit-row');
+            const rs=el('select','rep-sel sm');rs.id='edit-rep-'+g.id;rs.setAttribute('aria-label','是否循环');
+            for(const [v,t] of RT_OPTS[L.key])rs.append(new Option(t,v));rs.value=editing.rep;if(editing.rep)rs.classList.add('on');
+            rs.onchange=()=>{editing.rep=rs.value;rs.classList.toggle('on',!!rs.value)};
+            let committed=false;
+            const close=()=>{editing.id=null;editing.rep=null;editing.text=null};
+            const commit=()=>{if(committed)return;committed=true;const v=ta.value.trim()||g.title;const r2=editing.rep;close();saveGoalEdit(g,L,rt,v,r2,curRep)};
+            const sb=btn('bsave','保存',commit);const cb=btn('linkish','取消',()=>{committed=true;close();render()});cb.addEventListener('pointerdown',()=>{committed=true});sb.addEventListener('pointerdown',e=>{e.preventDefault()});
+            row.append(rs,sb,cb);
+            if(rt)row.append(el('span','hint',r2hint(L.key)));
+            main.append(ta,row);
+            autoGrow(ta,commit);
+            main.addEventListener('keydown',e=>{if(e.key==='Escape'){committed=true;close();render()}});
+            main.addEventListener('focusout',()=>setTimeout(()=>{if(!committed&&!main.contains(document.activeElement))commit()},0));
+            setTimeout(()=>ta.focus(),0);
+          } else main=longText('ttl2',g.title,'g-'+g.id);
+          const acts=el('div','row-acts');
+          if(canWrite&&db&&g.routine&&editing.id!==g.id){
+            acts.append(btn(null,'编辑',()=>{editing.id=g.id;editing.rep=null;editing.text=null;confirmDel.id=null;render()}));
+            const unit={day:'今天',week:'这一周',month:'这个月'}[L.key];
+            if(confirmDel.id===g.id){
+              acts.append(btn('sure','只删'+unit,()=>{confirmDel.id=null;skipRoutine(g)}));
+              acts.append(btn('sure','全部删除',()=>{confirmDel.id=null;removeRoutine(g.routine)}));
+              acts.append(btn(null,'取消',()=>{confirmDel.id=null;render()}));
+            } else acts.append(btn(null,'删除',()=>{confirmDel.id=g.id;editing.id=null;render()}));
+          }
+          if(canWrite&&db&&!g.routine&&editing.id!==g.id){
+            if(g.status!=='done'){const p=btn('push','顺延',()=>moveTo(g,nextKey(L.key,g.period)));p.title='移到下一'+L.unit;acts.append(p)}
+            acts.append(btn(null,'编辑',()=>{editing.id=g.id;editing.rep=null;editing.text=null;confirmDel.id=null;render()}));
+            acts.append(btn(confirmDel.id===g.id?'sure':null,confirmDel.id===g.id?'确认删除':'删除',()=>{if(confirmDel.id===g.id){confirmDel.id=null;deleteGoal(g)}else{confirmDel.id=g.id;render()}}));
+          }
+          li.append(ck,main,acts);
+          const meta=el('div','meta');
+          if(g.example)meta.append(el('span','chip ex','示例'));
+          if(g.routine)meta.append(el('span','chip src',rtLabel(routines.find(r=>r.id===g.routine)||{level:L.key})));
+          if(g.due)meta.append(el('span','chip '+(g.status!=='done'&&g.due<todayKey()?'late':'due'),'截止 '+shortLabel('day',g.due)));
+          if(g.noteId)meta.append(el('span','chip src','来自速记'));
+          if(g.delays)meta.append(el('span','chip delay','已顺延 '+g.delays+' 次 · 原定 '+shortLabel(L.key,g.origin||g.period)));
+          if(L.key!=='day'&&g.status==='done'&&g.doneAt){const t=new Date(g.doneAt);meta.append(el('span','chip when','完成于 '+(t.getMonth()+1)+'/'+t.getDate()))}
+          if(meta.childNodes.length)li.append(meta);
+          ul.append(li);
+        }
+        if(visible.length)s.append(ul);
+        if(doneList.length){const t=btn('done-toggle',(doneOpen[L.key]?'▾ 收起':'▸ 显示')+'已完成 '+doneList.length+' 项',()=>{doneOpen[L.key]=!doneOpen[L.key];render()});t.setAttribute('aria-expanded',!!doneOpen[L.key]);s.append(t)}
+        if(!visible.length&&!doneOpen[L.key])s.append(el('div','empty','这一'+L.unit+'的目标都完成了。'));
+      }
+      if(canWrite&&db){
+        const f=el('form','add');
+        const inp=el('textarea');inp.id='add-'+L.key;inp.placeholder=L.ph;inp.maxLength=500;inp.setAttribute('aria-label',L.ph);inp.dataset.grow='1';
+        inp.title='Enter 添加，Ctrl+Enter 换行';inp.value=drafts[L.key]||'';inp.oninput=()=>{drafts[L.key]=inp.value};
+        autoGrow(inp,()=>f.requestSubmit());
+        const b=el('button',null,'添加');b.type='submit';
+        const rs=el('select','rep-sel');rs.id='rep-'+L.key;rs.setAttribute('aria-label','是否循环');
+        for(const [v,t] of RT_OPTS[L.key])rs.append(new Option(t,v));rs.value=addRep[L.key];rs.onchange=()=>{addRep[L.key]=rs.value;render()};
+        if(addRep[L.key])rs.classList.add('on');
+        f.append(inp,rs,b);
+        f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;inp.value='';fit(inp);drafts[L.key]='';
+          const rp=addRep[L.key];
+          if(rp){const r={id:'rt'+Date.now().toString(36),title:v,level:L.key,since:key};if(L.key==='day')r.days=rp;if(rp==='biweekly')r.every=2;saveRoutines([...routines,r]);return}
+          create('goals',{level:L.key,period:key,title:v,status:'todo',delays:0,origin:key,history:[],order:Date.now()})};
+        s.append(f);
+      }
+      if(L.key==='month'){const body=el('div','sheet-body');[...s.children].slice(1).forEach(c=>body.append(c));s.append(body)}
+      grid.append(s);
+    }
+  }
+
+  /* ---------- Tasks：一个任务下面按 1. 2. 3. 列出子项，直接在页面上改 ---------- */
+  let tasks=[],tasksReady=false;
+  const tkUI={outOpen:null,open:{},newTitle:'',newDue:'',confirm:null,showDone:false,draft:{},edit:{},busy:{},msg:{},link:null,linkUrl:'',linkName:'',fconfirm:null};
+  let assetsFn=null,downloadsFn=null;
+  const FTYPES={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',mp4:'video/mp4',webm:'video/webm',csv:'text/csv',md:'text/markdown',markdown:'text/markdown',txt:'text/plain',json:'application/json'};
+  const FACCEPT=Object.keys(FTYPES).map(x=>'.'+x).join(',');
+  const extOf=n=>((n||'').match(/\.([a-z0-9]+)$/i)||[])[1]?.toLowerCase()||'';
+  function fLabel(f){if(f.url)return '链接';if(f.kind==='sheet')return 'Excel';if(f.kind==='doc')return 'Word';if(f.kind==='ppt')return 'PPT';const e=extOf(f.name);if(e==='pdf')return 'PDF';if(/^(png|jpe?g|gif|webp|svg)$/.test(e))return '图片';if(/^(mp4|webm)$/.test(e))return '视频';if(e==='csv')return '表格';return (e||'文件').toUpperCase()}
+  function fSize(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'}
+  function tkCur(t){return tkItems(tasks.find(x=>x.id===t.id)||t)}
+  // 上传文档到某一项（itemId 为 null 时新建一项）
+  async function tkAttach(t,itemId,fileList){
+    const key=t.id+'/'+(itemId||'new');
+    if(!assetsFn){tkUI.msg[key]={err:true,text:'当前视图不能上传文档（需要编辑权限）。'};render();return}
+    const ok=[],bad=[],office=[];
+    for(const f of fileList){const e=extOf(f.name);let ty=FTYPES[e];
+      if(f.size>20*1048576){bad.push(f.name+'（超过 20 MB）');continue}
+      if(/^(xlsx|xlsm|xls|docx|pptx)$/.test(e)){if(f.size>15*1048576){bad.push(f.name+'（Word / Excel / PPT 超过 15 MB）');continue}ok.push([f,'conv']);continue}
+      if(!ty){(/^(doc|ppt|key|pages|numbers)$/.test(e)?office:bad).push(f.name);continue}
+      ok.push([f,ty])}
+    tkUI.busy[key]=(tkUI.busy[key]||0)+ok.length;tkUI.msg[key]=null;render();
+    const added=[];const errs=[];
+    for(const [f,ty] of ok){
+      try{
+        const rec={id:uid(),name:f.name,size:f.size,at:Date.now()};
+        if(ty==='conv'){
+          const e=extOf(f.name);
+          // 原文件：存一份完整副本，点击文件名时下载并用 Excel / Word / PPT 打开
+          if(GMODE){const o=await assetsFn.upload(f,{type:OFFICE_MIME[e]||'application/octet-stream'});rec.oid=o.id}
+          else if(e!=='xls'&&e!=='xlsm'){const o=await assetsFn.upload(new Blob([await toB64(f)],{type:'text/plain'}),{type:'text/plain'});rec.oid=o.id}
+          // 预览副本（PPT 没有预览）
+          if(e!=='pptx'){try{const c=await convertOffice(f);const r=await assetsFn.upload(new Blob([JSON.stringify(c.data)],{type:'application/json'}),{type:'application/json'});rec.aid=r.id;rec.kind=c.kind}catch(x){if(!rec.oid)throw x}}
+          else rec.kind='ppt';
+        } else {const r=await assetsFn.upload(f,{type:ty});rec.aid=r.id}
+        added.push(rec)}
+      catch(err){errs.push(f.name+(err&&err.code==='too_large'?'（太大）':err&&err.code==='quota_or_state'?'（存储空间已满）':err&&err.conv?'（文件读不出来，可另存为 PDF 再加）':'（上传失败）'))}
+      tkUI.busy[key]--;
+    }
+    if(added.length){
+      const cur=tkCur(t);
+      if(itemId==='__bg'){const tt=tasks.find(x=>x.id===t.id)||t;const bf=[...(tt.bgFiles||[]),...added];t.bgFiles=bf;tkSave(t,{bgFiles:bf})}
+      else if(itemId&&cur.some(x=>x.id===itemId))tkSetItems(t,cur.map(x=>x.id===itemId?Object.assign({},x,{files:[...(x.files||[]),...added]}):x));
+      else{const txt=(tkUI.draft[t.id]||'').trim()||added.map(a=>a.name.replace(/\.[^.]+$/,'')).join('、');tkUI.draft[t.id]='';tkSetItems(t,[...cur,{id:uid(),text:txt,done:false,files:added}])}
+    }
+    const m=[];
+    if(office.length)m.push(office.join('、')+'：旧版 .doc / .ppt 暂不支持，请另存为 .docx / .pptx 或 PDF 再加，或用「＋ 链接」贴在线文档地址');
+    if(bad.length)m.push(bad.join('、')+'：不支持这个格式（可传 Word .docx、Excel、PDF、图片、CSV、TXT）');
+    if(errs.length)m.push(errs.join('、'));
+    tkUI.msg[key]=m.length?{err:true,text:m.join('。')}:null;
+    render();
+  }
+  // Word / Excel 在浏览器里转成可预览的副本（原文件留在你电脑上）
+  const libs={};
+  function loadLib(key,src,global){if(window[global])return Promise.resolve(window[global]);if(!libs[key])libs[key]=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=()=>window[global]?res(window[global]):rej(new Error('load'));sc.onerror=()=>{libs[key]=null;rej(new Error('load'))};document.head.append(sc)});return libs[key]}
+  const XLSX_SRC='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',MAMMOTH_SRC='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+  async function convertOffice(f){
+    const e=extOf(f.name);const buf=await f.arrayBuffer();
+    try{
+      if(e==='docx'){const m=await loadLib('m',MAMMOTH_SRC,'mammoth');const r=await m.convertToHtml({arrayBuffer:buf});return {kind:'doc',data:{v:1,html:r.value}}}
+      const X=await loadLib('x',XLSX_SRC,'XLSX');const wb=X.read(buf,{type:'array',cellDates:true});
+      const sheets=wb.SheetNames.map(n=>{const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''});return {name:n,rows:rows.slice(0,3000).map(r=>r.slice(0,80))}});
+      return {kind:'sheet',data:{v:1,sheets}};
+    }catch(err){const x=new Error('conv');x.conv=true;throw x}
+  }
+  function cleanHtml(html){
+    const doc=new DOMParser().parseFromString('<div>'+html+'</div>','text/html');
+    const OK=/^(P|BR|B|STRONG|I|EM|U|S|SUB|SUP|H[1-6]|UL|OL|LI|TABLE|THEAD|TBODY|TR|TD|TH|A|IMG|SPAN|DIV|BLOCKQUOTE|PRE|CODE|HR)$/;
+    const walk=n=>{for(const c of [...n.children]){if(/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|TEMPLATE|NOSCRIPT)$/.test(c.tagName)){c.remove();continue}if(!OK.test(c.tagName)){c.replaceWith(...c.childNodes);continue}
+      for(const a of [...c.attributes]){const k=a.name.toLowerCase();const keep=(k==='href'&&/^https?:/i.test(a.value))||(k==='src'&&/^data:image\//i.test(a.value))||k==='colspan'||k==='rowspan'||k==='alt';if(!keep)c.removeAttribute(a.name)}
+      if(c.tagName==='A'){c.target='_blank';c.rel='noopener'}walk(c)}};
+    const root=doc.body.firstChild;walk(root);walk(root);return root;
+  }
+  let viewer=null;
+  function closeViewer(){if(viewer){viewer.remove();viewer=null;document.removeEventListener('keydown',viewerKey)}}
+  function viewerKey(e){if(e.key==='Escape')closeViewer()}
+  function csvRows(t){const rows=[];let row=[],cur='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}else if(ch==='"')q=true;else if(ch===','){row.push(cur);cur=''}else if(ch==='\n'){row.push(cur.replace(/\r$/,''));rows.push(row);row=[];cur=''}else cur+=ch}if(cur||row.length){row.push(cur);rows.push(row)}return rows}
+  function sheetTable(rows){const tb=el('table','vw-table');rows.forEach((r,i)=>{const tr=el('tr');r.forEach(c=>tr.append(el(i===0?'th':'td',null,String(c))));tb.append(tr)});return tb}
+  async function openViewer(f){
+    closeViewer();
+    const href=GMODE?'#':'/_blob/'+f.aid;const e=extOf(f.name);
+    if(GMODE&&!(f.kind==='doc'||f.kind==='sheet'||/^(csv|json|txt|md|markdown)$/.test(e))){HOST.openFile(f.aid,f.name);return}
+    const ov=el('div','vw-overlay');ov.onclick=ev=>{if(ev.target===ov)closeViewer()};
+    const box=el('div','vw-box');box.setAttribute('role','dialog');box.setAttribute('aria-label',f.name);
+    const hd=el('div','vw-head');hd.append(el('div','vw-name',f.name));
+    if(!f.kind&&!GMODE){const a=el('a','linkish','新窗口打开');a.href=href;a.target='_blank';a.rel='noopener';hd.append(a)}
+    hd.append(btn('linkish','关闭',closeViewer));
+    const bd=el('div','vw-body');box.append(hd,bd);ov.append(box);document.body.append(ov);viewer=ov;document.addEventListener('keydown',viewerKey);
+    try{
+      if(e==='pdf'){const fr=el('iframe','vw-frame');fr.src=href;fr.title=f.name;bd.append(fr);bd.classList.add('flush');return}
+      if(/^(png|jpe?g|gif|webp|svg)$/.test(e)){const im=el('img','vw-img');im.src=href;im.alt=f.name;bd.append(im);return}
+      if(/^(mp4|webm)$/.test(e)){const v=el('video','vw-img');v.src=href;v.controls=true;bd.append(v);return}
+      bd.append(el('div','tk-fmsg','正在打开…'));
+      const txt=await blobText(f.aid);bd.textContent='';
+      if(f.kind==='doc'){const d=JSON.parse(txt);const art=el('div','vw-doc');art.append(cleanHtml(d.html||''));bd.append(art);return}
+      if(f.kind==='sheet'){const d=JSON.parse(txt);const sh=d.sheets||[];let cur=0;
+        const tabs=el('div','vw-tabs');const area=el('div','vw-scroll');
+        const show=()=>{area.textContent='';const s=sh[cur];area.append(s&&s.rows.length?sheetTable(s.rows):el('div','tk-fmsg','（空表）'));[...tabs.children].forEach((b,i)=>b.classList.toggle('on',i===cur))};
+        if(sh.length>1)sh.forEach((s,i)=>tabs.append(btn('vw-tab',s.name,()=>{cur=i;show()})));
+        bd.append(tabs,area);show();return}
+      if(e==='csv'){const a=el('div','vw-scroll');a.append(sheetTable(csvRows(txt)));bd.append(a);return}
+      if(e==='json'){try{bd.append(el('pre','vw-pre',JSON.stringify(JSON.parse(txt),null,2)))}catch(x){bd.append(el('pre','vw-pre',txt))}return}
+      bd.append(el('pre','vw-pre',txt));
+    }catch(err){bd.textContent='';bd.append(el('div','tk-fmsg err','打不开这个文件，可能已被移除。'))}
+  }
+  const OFFICE_MIME={xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',xlsm:'application/vnd.ms-excel.sheet.macroEnabled.12',xls:'application/vnd.ms-excel',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',pdf:'application/pdf'};
+  async function toB64(file){const u=new Uint8Array(await file.arrayBuffer());let s='';const C=0x8000;for(let i=0;i<u.length;i+=C)s+=String.fromCharCode.apply(null,u.subarray(i,i+C));return btoa(s)}
+  function fromB64(b){const s=atob(b.trim());const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
+  async function openOriginal(f,a){
+    const note=(text,err)=>{tkUI.fmsg={id:f.id,text,err};render();if(!err)setTimeout(()=>{if(tkUI.fmsg&&tkUI.fmsg.id===f.id){tkUI.fmsg=null;render()}},6000)};
+    if(GMODE){HOST.openFile(f.oid,f.name);return}
+    if(!downloadsFn){note('这里打不开原文件，可以点「预览」查看',true);return}
+    try{
+      note('正在取出原文件…');
+      const txt=await (await fetch('/_blob/'+f.oid)).text();
+      const r=await downloadsFn.save({filename:f.name,data:new Blob([fromB64(txt)])});
+      note('已保存到「下载」，点浏览器下载栏里的文件即可用 Office 打开');
+    }catch(err){
+      const c=err&&err.code;
+      if(c==='declined'){tkUI.fmsg=null;render();return}
+      note(c==='rate_limited'?'上一个保存提示还没关，请先处理它':'打不开原文件'+(f.aid?'，可以点「预览」查看':''),true);
+    }
+  }
+  async function saveOutcome(t,itemId,v){
+    const cur=tkCur(t);const me=cur.find(x=>x.id===itemId);if(!me)return;
+    const routed=new Set(me.routed||[]);const newly=[];
+    const dk=t.evDate||t.due||todayKey();
+    for(const raw of v.split('\n')){
+      const line=raw.replace(/^\s*(?:[-*•·]|\d{1,2}[.、)）])\s*/,'').trim();if(!line||routed.has(line))continue;
+      const isRule=/^(规则|口径)\s*[:：]/.test(line);const isTodo=/^(待办|todo|to do|TODO|@)\s*[:：]?/i.test(line);const due=detectDue(line);const rr=!isRule?detectRepeat(line):null;
+      if(!isRule&&!isTodo&&!due&&!rr)continue;
+      if(rr){routed.add(line);newly.push(line);try{await addRoutineFrom(line.replace(/^(待办|todo|to do|@)\s*[:：]?\s*/i,''),rr)}catch(e){fail(e)}continue}
+      routed.add(line);newly.push(line);
+      try{
+        if(isRule)await db.collection('notes').add({date:dk,cat:'rule',text:line.replace(/^(规则|口径)\s*[:：]\s*/,''),meeting:t.title||'',createdAt:Date.now(),done:false,goalId:'',fromTopic:t.id});
+        else await addGoalFor('',line.replace(/^(待办|todo|to do|@)\s*[:：]?\s*/i,''),due);
+      }catch(e){fail(e)}
+    }
+    const patch={outcome:v};if(newly.length)patch.routed=[...routed];
+    if(v!==(me.outcome||'')||newly.length)tkSetItems(t,cur.map(x=>x.id===itemId?Object.assign({},x,patch):x));else render();
+  }
+  function tkAddLink(t,itemId){
+    let u=tkUI.linkUrl.trim();if(!u)return;if(!/^https?:\/\//i.test(u))u='https://'+u;
+    let host='';try{host=new URL(u).hostname.replace(/^www\./,'')}catch(e){tkUI.msg[t.id+'/'+(itemId||'new')]={err:true,text:'链接格式不对'};render();return}
+    const f={id:uid(),url:u,name:tkUI.linkName.trim()||host,at:Date.now()};
+    const cur=tkCur(t);
+    if(itemId==='__bg'){const tt=tasks.find(x=>x.id===t.id)||t;const bf=[...(tt.bgFiles||[]),f];t.bgFiles=bf;tkSave(t,{bgFiles:bf})}
+    else if(itemId&&cur.some(x=>x.id===itemId))tkSetItems(t,cur.map(x=>x.id===itemId?Object.assign({},x,{files:[...(x.files||[]),f]}):x));
+    else{const txt=(tkUI.draft[t.id]||'').trim()||f.name;tkUI.draft[t.id]='';tkSetItems(t,[...cur,{id:uid(),text:txt,done:false,files:[f]}])}
+    tkUI.link=null;tkUI.linkUrl='';tkUI.linkName='';render();
+  }
+  function tkRemoveFile(t,itemId,f){
+    if(itemId==='__bg'){const tt=tasks.find(x=>x.id===t.id)||t;const bf=(tt.bgFiles||[]).filter(y=>y.id!==f.id);t.bgFiles=bf;tkSave(t,{bgFiles:bf})}
+    else{const cur=tkCur(t);tkSetItems(t,cur.map(x=>x.id===itemId?Object.assign({},x,{files:(x.files||[]).filter(y=>y.id!==f.id)}):x))}
+    tkUI.fconfirm=null;
+    if(f.aid&&assetsFn)assetsFn.delete(f.aid).catch(()=>{});
+    if(f.oid&&assetsFn)assetsFn.delete(f.oid).catch(()=>{});
+  }
+  function pickFiles(fn){const i=el('input');i.type='file';i.multiple=true;i.accept=FACCEPT+',.docx,.xls,.xlsx,.xlsm,.pptx';i.style.display='none';i.onchange=()=>{const fs=[...i.files];i.remove();if(fs.length)fn(fs)};document.body.append(i);i.click()}
+  // 拖动议题调整顺序（按住编号拖）
+  function tkDragStart(e,t,li){
+    if(e.button!==0)return;e.preventDefault();
+    const ol=li.parentElement;const lis=[...ol.querySelectorAll(':scope > li.tk-item')];
+    const from=lis.indexOf(li);let to=from;
+    li.classList.add('dragging');document.body.classList.add('tk-dragging');
+    const clear=()=>lis.forEach(x=>x.classList.remove('drop-before','drop-after'));
+    const move=ev=>{
+      const y=ev.clientY;let idx=lis.length-1;
+      for(let k=0;k<lis.length;k++){const r=lis[k].getBoundingClientRect();if(y<r.top+r.height/2){idx=k;break}}
+      // idx = 放到第 idx 项之前（最后一项之后时 idx=len）
+      const last=lis[lis.length-1].getBoundingClientRect();if(y>=last.top+last.height/2)idx=lis.length;
+      to=idx>from?idx-1:idx;clear();
+      if(to!==from){if(idx<lis.length)lis[idx].classList.add('drop-before');else lis[lis.length-1].classList.add('drop-after')}
+      const vh=window.innerHeight;if(y<60)window.scrollBy(0,-12);else if(y>vh-60)window.scrollBy(0,12);
+    };
+    const up=()=>{
+      document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+      clear();li.classList.remove('dragging');document.body.classList.remove('tk-dragging');
+      if(to===from)return;
+      const cur=tkCur(t);const id=li.dataset.iid;const k=cur.findIndex(x=>x.id===id);if(k<0)return;
+      const a=[...cur];const [m]=a.splice(k,1);a.splice(Math.min(to,a.length),0,m);tkSetItems(t,a);render();
+    };
+    document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+  }
+  function fileDrop(target,fn){
+    target.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){e.preventDefault();target.classList.add('drop')}});
+    target.addEventListener('dragleave',e=>{if(!target.contains(e.relatedTarget))target.classList.remove('drop')});
+    target.addEventListener('drop',e=>{target.classList.remove('drop');const fs=e.dataTransfer?[...e.dataTransfer.files]:[];if(fs.length){e.preventDefault();fn(fs)}});
+  }
+  // 附件行：已加的文档 + ＋文档 / ＋链接
+  function tkFilesRow(t,itemId,files,editable){
+    const key=t.id+'/'+(itemId||'new');
+    const wrap=el('div');
+    const row=el('div','tk-files');
+    for(const f of files||[]){
+      const c=el('span','tk-file');
+      const href=f.url||(GMODE?'#':'/_blob/'+(f.aid||f.oid));
+      if(!GMODE&&!f.url&&/^(png|jpe?g|gif|webp|svg)$/.test(extOf(f.name))){const im=el('img');im.src=href;im.alt='';c.append(im)}
+      else c.append(el('span','ftype',fLabel(f)));
+      const a=el('a',null,f.name);a.href=href;a.target='_blank';a.rel='noopener';a.title=f.name+(f.size?' · '+fSize(f.size):'');
+      if(f.oid){a.title=(GMODE?(HOST.openHint||'点击打开原文件')+' · ':'点击打开原文件（用 Excel / Word / PPT 打开）· ')+fSize(f.size);a.onclick=ev=>{ev.preventDefault();openOriginal(f,a)}}
+      else if(!f.url){a.onclick=ev=>{ev.preventDefault();openViewer(f)}}
+      c.append(a);
+      if(f.oid&&f.aid)c.append(btn('fx pv','预览',()=>openViewer(f),'在页面里预览 '+f.name));
+      if(tkUI.fmsg&&tkUI.fmsg.id===f.id)c.append(el('span','fnote'+(tkUI.fmsg.err?' err':''),tkUI.fmsg.text));
+      if(editable){const cf=tkUI.fconfirm===f.id;c.append(btn('fx'+(cf?' danger':''),cf?'确认移除':'×',()=>{if(cf)tkRemoveFile(t,itemId,f);else{tkUI.fconfirm=f.id;render()}},'移除 '+f.name))}
+      row.append(c);
+    }
+    if(editable){
+      const fa=el('span','tk-fadd');
+      fa.append(btn(null,'＋ 文档',()=>pickFiles(fs=>tkAttach(t,itemId,fs)),'添加文档'));
+      fa.append(btn(null,'＋ 链接',()=>{tkUI.link=key;tkUI.linkUrl='';tkUI.linkName='';render();setTimeout(()=>{const x=$('tk-link-'+key.replace('/','-'));if(x)x.focus()},50)},'添加在线文档链接'));
+      row.append(fa);
+      if(tkUI.busy[key])row.append(el('span','tk-fmsg','上传中…'));
+    }
+    if((files&&files.length)||editable)wrap.append(row);
+    if(editable&&tkUI.link===key){
+      const lf=el('div','tk-link');
+      const u=el('input');u.id='tk-link-'+key.replace('/','-');u.placeholder='粘贴文档链接（钉钉文档、Google Doc 等）';u.value=tkUI.linkUrl;u.oninput=()=>{tkUI.linkUrl=u.value};
+      const n=el('input');n.placeholder='名称（选填）';n.value=tkUI.linkName;n.oninput=()=>{tkUI.linkName=n.value};n.style.flex='0 1 12em';
+      const go=()=>tkAddLink(t,itemId);
+      [u,n].forEach(x=>x.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}else if(e.key==='Escape'){tkUI.link=null;render()}});
+      lf.append(u,n,btn('linkish','添加',go),btn('linkish','取消',()=>{tkUI.link=null;render()}));
+      wrap.append(lf);
+    }
+    if(tkUI.msg[key])wrap.append(el('div','tk-fmsg'+(tkUI.msg[key].err?' err':''),tkUI.msg[key].text));
+    return wrap;
+  }
+  function tkItems(t){return Array.isArray(t.items)?t.items:[]}
+  async function tkSave(t,patch){try{await db.doc('tasks/'+t.id).update(Object.assign({updatedAt:Date.now()},patch))}catch(e){fail(e)}}
+  function tkSetItems(t,items){t.items=items;tkSave(t,{items})}
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  function renderTasks(){
+    const box=$('tasks');if(!box)return;box.textContent='';
+    const head=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title','Topic'),el('div','range','为某个会议准备议题：一个会议一张卡，按 1. 2. 3. 列出要讨论的点，直接在这里改'));
+    const active=tasks.filter(t=>!t.archived).sort((a,b)=>(a.due||'9999')<(b.due||'9999')?-1:(a.due||'9999')>(b.due||'9999')?1:(a.createdAt||0)-(b.createdAt||0));
+    const archived=tasks.filter(t=>t.archived);
+    const sum=el('div','sum');const s1=el('span');s1.append('进行中 ',el('b',null,String(active.length)));sum.append(s1);
+    head.append(hl,sum);box.append(head);
+    if(!tasksReady){box.append(el('div','empty','正在加载…'));return}
+    if(!active.length)box.append(el('div','empty','还没有会议议题。在下方新建一个，比如「10/14 Demo Room 双周会」。'));
+    const wrap=el('div','tk-list');
+    for(const t of active)wrap.append(renderTask(t));
+    box.append(wrap);
+    if(archived.length){
+      const tg=btn('done-toggle',(tkUI.showDone?'▾ 收起':'▸ 显示')+'已开完的会议 '+archived.length+' 个',()=>{tkUI.showDone=!tkUI.showDone;render()});box.append(tg);
+      if(tkUI.showDone){const w2=el('div','tk-list');for(const t of archived)w2.append(renderTask(t));box.append(w2)}
+    }
+    if(!(canWrite&&db))return;
+    const f=el('form','tk-new');
+    const ti=el('input');ti.id='tk-new-title';ti.placeholder='新建会议议题，例如：10/21 和 OP 周会';ti.maxLength=120;ti.value=tkUI.newTitle;ti.oninput=()=>{tkUI.newTitle=ti.value};
+    const di=el('input');di.type='date';di.id='tk-new-due';di.value=tkUI.newDue;di.setAttribute('aria-label','会议日期（选填）');di.onchange=()=>{tkUI.newDue=di.value};
+    const b=el('button','primary','新建议题');b.type='submit';
+    f.append(ti,di,b);
+    f.onsubmit=async e=>{e.preventDefault();const v=tkUI.newTitle.trim();if(!v)return;const due=tkUI.newDue;tkUI.newTitle='';tkUI.newDue='';
+      const ref=db.collection('tasks').doc();tkUI.open[ref.id]=true;
+      try{await ref.set({title:v,due,items:[],archived:false,createdAt:Date.now(),updatedAt:Date.now()})}catch(err){fail(err)}
+      setTimeout(()=>{const x=$('tk-add-'+ref.id);if(x)x.focus()},300)};
+    box.append(f);
+  }
+  function renderTask(t,embedded){
+    const items=tkItems(t);const done=items.filter(i=>i.done).length;
+    const open=embedded?true:tkUI.open[t.id]!==false;
+    const card=el('article','tk'+(t.archived&&!embedded?' archived':'')+(embedded?' embedded':''));
+    if(embedded){
+      const top=el('div','tk-top');
+      top.append(el('span','tk-count',items.length?items.length+' 个议题':'还没有议题'));
+      const acts=el('div','tk-acts');
+      if(canWrite&&db)acts.append(btn('linkish'+(tkUI.confirm===t.id?' danger':''),tkUI.confirm===t.id?'确认删除议题（日程保留）':'删除议题',()=>{if(tkUI.confirm===t.id){tkUI.confirm=null;del('tasks',t.id)}else{tkUI.confirm=t.id;render()}}));
+      top.append(acts);card.append(top);
+    } else {
+    const top=el('div','tk-top');
+    const tg=btn('tk-fold',open?'▾':'▸',()=>{tkUI.open[t.id]=!open;render()},open?'收起':'展开');
+    const title=el('input','tk-title');title.id='tk-title-'+t.id;title.value=t.title||'';title.maxLength=120;title.readOnly=!(canWrite&&db);
+    title.onchange=()=>{const v=title.value.trim();if(v&&v!==t.title)tkSave(t,{title:v})};
+    title.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();title.blur()}};
+    const meta=el('div','tk-meta');
+    const di=el('input','tk-due');di.type='date';di.id='tk-due-'+t.id;di.value=t.due||'';di.disabled=!(canWrite&&db);di.setAttribute('aria-label','会议日期');
+    di.onchange=()=>tkSave(t,{due:di.value});
+    meta.append(el('span','tk-count',items.length+' 个议题'));
+    if(t.due){const late=!t.archived&&t.due<todayKey();meta.append(el('span','chip '+(late?'late':'due'),(late?'已过 ':'会议 ')+shortLabel('day',t.due)))}
+    meta.append(di);
+    const acts=el('div','tk-acts');
+    if(canWrite&&db){
+      acts.append(btn('linkish',t.archived?'恢复':'会议已开完',()=>tkSave(t,{archived:!t.archived,archivedAt:t.archived?null:Date.now()})));
+      acts.append(btn('linkish'+(tkUI.confirm===t.id?' danger':''),tkUI.confirm===t.id?'确认删除':'删除',()=>{if(tkUI.confirm===t.id){tkUI.confirm=null;del('tasks',t.id)}else{tkUI.confirm=t.id;render()}}));
+    }
+    top.append(tg,title,meta,acts);card.append(top);
+    }
+    if(!open)return card;
+    // 背景介绍：单独一格，不编号
+    {
+      const editableBg=canWrite&&!!db&&(!t.archived||embedded);
+      if(editableBg||(t.bg&&t.bg.trim())||(t.bgFiles&&t.bgFiles.length)){
+        const bx=el('div','tk-bg');bx.append(el('div','tk-bg-label','背景'));
+        const ta=el('textarea','tk-bg-text');ta.id='tk-bg-'+t.id;ta.dataset.grow='1';ta.readOnly=!editableBg;
+        ta.placeholder='背景介绍：这次会议为什么开、目前进展到哪、需要大家决定什么…（Enter 换行，点别处自动保存）';
+        ta.value=tkUI.edit[ta.id]!=null?tkUI.edit[ta.id]:(t.bg||'');
+        ta.addEventListener('input',()=>{tkUI.edit[ta.id]=ta.value});
+        ta.addEventListener('blur',()=>{if(tkUI.edit[ta.id]==null)return;const v=ta.value.replace(/\s+$/,'');delete tkUI.edit[ta.id];if(v!==(t.bg||'')){t.bg=v;tkSave(t,{bg:v})}});
+        autoGrow(ta);
+        bx.append(ta);
+        if(editableBg||(t.bgFiles&&t.bgFiles.length))bx.append(tkFilesRow(t,'__bg',t.bgFiles,editableBg));
+        if(editableBg){fileDrop(bx,fs=>tkAttach(t,'__bg',fs));ta.addEventListener('paste',e=>{const fs=e.clipboardData?[...e.clipboardData.files]:[];if(fs.length){e.preventDefault();tkAttach(t,'__bg',fs)}})}
+        card.append(bx);
+      }
+    }
+    const ol=el('ol','tk-items');
+    items.forEach((it,i)=>{
+      const li=el('li','tk-item'+(it.done?' done':''));
+      const editable=canWrite&&!!db&&(!t.archived||embedded);
+      const no=el('span','tk-no',(i+1)+'.');
+      li.dataset.iid=it.id;
+      if(editable&&items.length>1){no.classList.add('tk-grip');no.title='按住拖动，调整顺序（也可在输入框里按 Alt+↑ / Alt+↓）';no.prepend(el('span','grip','⠿'));no.addEventListener('pointerdown',e=>tkDragStart(e,t,li))}
+      const ck=btn('chk'+(it.done?' on':''),null,()=>tkSetItems(t,items.map(x=>x.id===it.id?Object.assign({},x,{done:!x.done}):x)),(it.done?'标记为未完成：':'标记为完成：')+it.text);
+      ck.innerHTML=CHECK;ck.disabled=!(canWrite&&db);
+      const ta=el('textarea','tk-text');ta.id='tk-'+t.id+'-'+it.id;ta.value=tkUI.edit[ta.id]!=null?tkUI.edit[ta.id]:it.text;ta.dataset.grow='1';ta.readOnly=!(canWrite&&db);
+      ta.addEventListener('input',()=>{tkUI.edit[ta.id]=ta.value});
+      const commit=()=>{if(tkUI.edit[ta.id]==null)return;const v=ta.value.replace(/\s+$/,'');delete tkUI.edit[ta.id];const cur=tkItems(tasks.find(x=>x.id===t.id)||t);const me=cur.find(x=>x.id===it.id);if(me&&v!==me.text){const items=cur;if(!v.trim()&&!(me.files&&me.files.length))tkSetItems(t,items.filter(x=>x.id!==it.id));else tkSetItems(t,items.map(x=>x.id===it.id?Object.assign({},x,{text:v}):x))}};
+      autoGrow(ta,()=>{commit();const nx=$('tk-add-'+t.id);if(nx)nx.focus()});
+      ta.addEventListener('blur',commit);
+      if(editable)ta.addEventListener('keydown',e=>{if(e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();commit();const cur=tkCur(t);const k=cur.findIndex(x=>x.id===it.id);const j=k+(e.key==='ArrowUp'?-1:1);if(k<0||j<0||j>=cur.length)return;const a=[...cur];[a[k],a[j]]=[a[j],a[k]];tkSetItems(t,a);render();setTimeout(()=>{const x=$(ta.id);if(x)x.focus()},30)}});
+      const ia=el('div','tk-iacts');
+      if(canWrite&&db){
+        ia.append(btn(null,'↑',()=>{if(i===0)return;const a=[...items];[a[i-1],a[i]]=[a[i],a[i-1]];tkSetItems(t,a)},'上移'));
+        ia.append(btn(null,'↓',()=>{if(i===items.length-1)return;const a=[...items];[a[i+1],a[i]]=[a[i],a[i+1]];tkSetItems(t,a)},'下移'));
+        ia.append(btn(null,'删除',()=>tkSetItems(t,items.filter(x=>x.id!==it.id)),'删除第 '+(i+1)+' 项'));
+      }
+      const body=el('div','tk-body');body.append(ta);
+      // 会后结论：写在议题下面；带日期或以「待办」开头的行自动进目标，以「规则 / 口径」开头的行进知识库
+      {const oid='tk-out-'+t.id+'-'+it.id;const showOut=(it.outcome&&it.outcome.trim())||tkUI.outOpen===oid;
+       if(showOut){
+        const ow=el('div','tk-out');ow.append(el('div','tk-out-label','会后结论'));
+        const ot=el('textarea');ot.id=oid;ot.dataset.grow='1';ot.readOnly=!editable;ot.placeholder='会上的结论 / 待办，一行一条。写了日期（如 10/24、周五前）或以「待办」开头的会自动进目标；以「规则：」「口径：」开头的进知识库';
+        ot.value=tkUI.edit[oid]!=null?tkUI.edit[oid]:(it.outcome||'');ot.addEventListener('input',()=>{tkUI.edit[oid]=ot.value});
+        ot.addEventListener('blur',()=>{if(tkUI.edit[oid]==null)return;const v=ot.value.replace(/\s+$/,'');delete tkUI.edit[oid];if(tkUI.outOpen===oid&&!v)tkUI.outOpen=null;saveOutcome(t,it.id,v)});
+        autoGrow(ot);ow.append(ot);
+        const rc=(it.routed||[]).length;if(rc)ow.append(el('div','tk-fmsg','已自动转出 '+rc+' 条（目标 / 知识库）'));
+        body.append(ow);
+       }}
+      if(editable||(it.files&&it.files.length))body.append(tkFilesRow(t,it.id,it.files,editable));
+      {const oid='tk-out-'+t.id+'-'+it.id;const fa0=body.querySelector('.tk-fadd');if(editable&&fa0&&!(it.outcome&&it.outcome.trim())&&tkUI.outOpen!==oid)fa0.prepend(btn(null,'＋ 会后结论',()=>{tkUI.outOpen=oid;render();setTimeout(()=>{const x=$(oid);if(x)x.focus()},30)},'记录这个议题的会后结论'))}
+      {const fa=body.querySelector('.tk-fadd');if(editable&&fa){const ck='del:'+t.id+':'+it.id;const sure=tkUI.confirm===ck;
+        const db1=btn('tk-mv tk-del'+(sure?' danger':''),sure?'确认删除':'删除',()=>{if(!sure){tkUI.confirm=ck;render();return}tkUI.confirm=null;const cur=tkCur(t);const me=cur.find(x=>x.id===it.id);tkSetItems(t,cur.filter(x=>x.id!==it.id));render();if(me&&assetsFn)for(const f of me.files||[]){if(f.aid)assetsFn.delete(f.aid).catch(()=>{});if(f.oid)assetsFn.delete(f.oid).catch(()=>{})}},'删除第 '+(i+1)+' 个议题');
+        fa.append(db1)}}
+      if(editable&&items.length>1){const fa=body.querySelector('.tk-fadd');if(fa){
+        const mv=d=>{const cur=tkCur(t);const k=cur.findIndex(x=>x.id===it.id);const j=k+d;if(k<0||j<0||j>=cur.length)return;const a=[...cur];[a[k],a[j]]=[a[j],a[k]];tkSetItems(t,a);render()};
+        const u=btn('tk-mv','↑ 上移',()=>mv(-1),'上移第 '+(i+1)+' 项');u.disabled=i===0;
+        const dn=btn('tk-mv','↓ 下移',()=>mv(1),'下移第 '+(i+1)+' 项');dn.disabled=i===items.length-1;
+        fa.append(u,dn)}}
+      if(editable){fileDrop(li,fs=>tkAttach(t,it.id,fs));ta.addEventListener('paste',e=>{const fs=e.clipboardData?[...e.clipboardData.files]:[];if(fs.length){e.preventDefault();tkAttach(t,it.id,fs)}})}
+      li.append(no,body);ol.append(li);
+    });
+    card.append(ol);
+    if(canWrite&&db&&(!t.archived||embedded)){
+      const af=el('form','tk-add');
+      const ai=el('textarea');ai.id='tk-add-'+t.id;ai.placeholder='添加议题 '+(items.length+1)+'（Enter 添加，Ctrl+Enter 换行）';ai.dataset.grow='1';ai.value=tkUI.draft[t.id]||'';
+      ai.oninput=()=>{tkUI.draft[t.id]=ai.value};
+      autoGrow(ai,()=>af.requestSubmit());
+      const ab=el('div','tk-body');ab.append(ai,tkFilesRow(t,null,[],true));
+      af.append(el('span','tk-no',(items.length+1)+'.'),ab);
+      fileDrop(af,fs=>tkAttach(t,null,fs));
+      ai.addEventListener('paste',e=>{const fs=e.clipboardData?[...e.clipboardData.files]:[];if(fs.length){e.preventDefault();tkAttach(t,null,fs)}});
+      af.onsubmit=e=>{e.preventDefault();const v=ai.value.trim();if(!v)return;tkUI.draft[t.id]='';tkSetItems(t,[...items,{id:uid(),text:v,done:false}]);setTimeout(()=>{const x=$('tk-add-'+t.id);if(x)x.focus()},250)};
+      card.append(af);
+    }
+    return card;
+  }
+
+  /* ---------- Learnings & Task ---------- */
+  const normCat=c=>({rule:'rule',case:'case',idea:'idea',doubt:'doubt',meeting:'rule',question:'rule',flow:'idea'})[c]||'';
+  const todayKey=()=>dayKey(new Date());
+  function parseKey(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)}
+  // 从文字里识别截止日：10.15 / 10月15日 / 10/15 / 下周三 / 周五 / 明天 / 后天 / 14号
+  function detectDue(text){
+    const t=String(text||''); const now=new Date(); now.setHours(0,0,0,0);
+    let m=t.match(/(\d{1,2})\s*(?:[.\/]|月)\s*(\d{1,2})\s*[日号]?/);
+    if(m){const mo=+m[1],d=+m[2];if(mo>=1&&mo<=12&&d>=1&&d<=31){let dt=new Date(now.getFullYear(),mo-1,d);if(dt<now-60*864e5)dt=new Date(now.getFullYear()+1,mo-1,d);return dayKey(dt)}}
+    m=t.match(/(下下|下|本|这)?(?:周|星期|礼拜)([一二三四五六日天])/);
+    if(m){const idx={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':7,'天':7}[m[2]];const off={'下下':14,'下':7}[m[1]]||0;const mon=mondayOf(now);mon.setDate(mon.getDate()+off+idx-1);return dayKey(mon)}
+    if(/后天/.test(t)){const d=new Date(now);d.setDate(d.getDate()+2);return dayKey(d)}
+    if(/明天/.test(t)){const d=new Date(now);d.setDate(d.getDate()+1);return dayKey(d)}
+    if(/今天|今日/.test(t)&&/(前|之前|完成|截止|due)/i.test(t))return dayKey(now);
+    m=t.match(/(\d{1,2})\s*[号日]/);
+    if(m){const d=+m[1];if(d>=1&&d<=31){let dt=new Date(now.getFullYear(),now.getMonth(),d);if(dt<now)dt=new Date(now.getFullYear(),now.getMonth()+1,d);return dayKey(dt)}}
+    return '';
+  }
+  // 截止今天或已过 → 今日任务；本周内 → 本周目标；下周 → 下周目标；更晚 → 当月目标
+  function routeFor(due){
+    const tw=weekKey(new Date());
+    if(!due||due<=todayKey())return {level:'day',period:todayKey()};  // 截止今天（或已过期）→ 只放进今日任务
+    const dw=weekKey(parseKey(due));
+    if(dw<=tw)return {level:'week',period:tw};
+    if(dw===nextKey('week',tw))return {level:'week',period:dw};
+    return {level:'month',period:due.slice(0,7)};
+  }
+  function routeLabel(r){
+    if(r.level==='day')return '今日任务 '+shortLabel('day',r.period);
+    if(r.level==='week')return (r.period===weekKey(new Date())?'本周':'下周')+'目标（'+shortLabel('week',r.period)+'）';
+    return shortLabel('month',r.period)+'目标';
+  }
+  function goalTitle(text){const s=String(text).trim();return s.length>200?s.slice(0,198)+'…':s}
+  async function addGoalFor(noteId,text,due){
+    const r=routeFor(due);
+    const ref=db.collection('goals').doc();
+    const data={level:r.level,period:r.period,title:goalTitle(text),status:'todo',delays:0,origin:r.period,history:[],order:Date.now(),createdAt:Date.now(),noteId};
+    if(due)data.due=due;
+    await ref.set(data);
+    return ref.id;
+  }
+  async function saveNote(data,id){
+    try{
+      if(!id){
+        const ref=db.collection('notes').doc();
+        await ref.set(Object.assign({createdAt:Date.now(),done:false,goalId:''},data));
+        if(data.task){const gid=await addGoalFor(ref.id,data.text,data.due||'');await ref.update({goalId:gid})}
+        return ref.id;
+      }
+      const old=notes.find(n=>n.id===id)||{};
+      await db.doc('notes/'+id).update(data);
+      const g=old.goalId&&goals.find(x=>x.id===old.goalId);
+      if(g){const p={title:goalTitle(data.text)};if(data.due&&data.due!==g.due){const r=routeFor(data.due);Object.assign(p,{due:data.due,level:r.level,period:r.period})}await db.doc('goals/'+g.id).update(p)}
+      else if(data.task&&data.due){const gid=await addGoalFor(id,data.text,data.due);await db.doc('notes/'+id).update({goalId:gid})}
+    }catch(e){fail(e)}
+  }
+  /* ---------- 速记：随手一句，Claude 分到目标 / 知识库 ---------- */
+  const qUI={text:'',busy:false,err:'',showOld:false,ans:{},confirm:null};
+  function quickRoute(n){
+    if(n.routineId){const r=routines.find(x=>x.id===n.routineId);return {k:'goal',t:'→ '+(r?rtLabel(r):'固定目标')}}
+    if(n.goalId){const g=goals.find(x=>x.id===n.goalId);return {k:'goal',t:'→ '+(g?(g.level==='day'?'今日目标 '+shortLabel('day',g.period):g.level==='week'?(g.period===weekKey(new Date())?'本周':shortLabel('week',g.period))+'目标':shortLabel('month',g.period)+'目标'):'目标')}}
+    if(n.kbStatus==='filed')return {k:'kb',t:'→ 已入知识库'};
+    if(isEligible(n))return {k:'kb',t:'→ 知识库待整理'};
+    const c=normCat(n.cat);
+    if(c==='idea')return {k:'idea',t:'想法'};
+    if(c==='doubt')return {k:'doubt',t:'待确认'};
+    return {k:'none',t:'未分类'};
+  }
+  const needsAction=n=>{const k=quickRoute(n).k;return (k==='idea'||k==='doubt'||k==='none')&&!n.done&&!n.parked&&n.kbStatus!=='skip'};
+  async function quickSubmit(){
+    const raw=qUI.text.trim();if(!raw||qUI.busy)return;
+    const items=parseItems(raw);if(!items.length)return;
+    qUI.busy=true;qUI.err='';render();
+    let rows=items.map(it=>rowFrom({text:it.text},it.hint));
+    if(sampleFn){
+      const now=new Date();
+      const prompt=['你在帮一位 OMTech 员工把随手记的话归类。她负责 Demo Room Host Program 和 Impact Affiliate 两块业务，和 TS / MKT / OP 团队合作。',
+        '今天是 '+dayKey(now)+'（'+WD[now.getDay()]+'），本周一是 '+dayKey(mondayOf(now))+'。',
+        '每条保持原样，不要拆分、合并、改写。为每条判断：',
+        '- task：是不是需要她去做的事（true/false）；due：截止日 YYYY-MM-DD，没有就 ""',
+        '- cat：rule（已定的规则、做法、口径）| case（某个具体 host / 客户的情况）| idea（优化想法）| doubt（拿不准、要再确认）| ""（纯待办或判断不了）',
+        '- prog：drh | impact | ""；teams：只能取 "TS"、"MKT"、"OP"；people：涉及的人名',
+        '只回复 JSON 数组，长度 '+items.length+'，例如 [{"i":1,"task":true,"due":"","cat":"","prog":"drh","teams":[],"people":""}]','',
+        ...items.map((it,i)=>(i+1)+'. '+it.text.replace(/\n/g,' / ')+(Object.keys(it.hint).length?'（已标注：'+JSON.stringify(it.hint)+'）':''))].join('\n');
+      try{const out=await sampleFn.json(prompt,{modelTier:'quick'});const arr=Array.isArray(out)?out:(out&&Array.isArray(out.items)?out.items:[]);
+        rows=items.map((it,i)=>{const o=arr.find(x=>Number(x&&x.i)===i+1)||arr[i]||{};return rowFrom(Object.assign({},o,{text:it.text}),it.hint)})}
+      catch(e){if(e&&(e.code==='not_granted'||e.code==='capability_disabled'||e.code==='capability_removed'))sampleFn=null;qUI.err='Claude 暂时没能分类，已先记下，可以在下面手动归类。'}
+    }
+    for(const r of rows){if(/^(规则|口径)\s*[:：]/.test(r.text)){r.cat='rule';r.task=false}
+      const rr=!r.cat||r.task?detectRepeat(r.text):null;
+      if(rr){try{const rid=await addRoutineFrom(r.text,rr);await db.collection('notes').add({date:todayKey(),quick:true,cat:'',text:r.text,prog:r.prog,track:r.track,teams:r.teams,people:r.people,meeting:'',task:true,due:'',routineId:rid,createdAt:Date.now(),done:false,goalId:''})}catch(e){fail(e)}continue}
+      if(!r.task&&!r.cat&&r.due)r.task=true;await saveNote({date:todayKey(),quick:true,cat:r.cat,text:r.text,prog:r.prog,track:r.track,teams:r.teams,people:r.people,meeting:'',task:r.task,due:r.task?r.due:''})}
+    qUI.text='';qUI.busy=false;render();
+    setTimeout(()=>{const x=$('quick-in');if(x)x.focus()},50);
+  }
+  function renderQuick(){
+    const box=$('quick');if(!box)return;box.textContent='';
+    const head=el('div','panel-head');const hl=el('div');
+    hl.append(el('div','sec-title','速记'),el('div','range','随手写一句，Enter 记下。待办自动进今日 / 本周 / 本月目标，规则和个案进知识库；可一次粘贴多行'));
+    head.append(hl);box.append(head);
+    if(canWrite&&db){
+      const f=el('form','add quick-add');
+      const ta=el('textarea');ta.id='quick-in';ta.dataset.grow='1';ta.placeholder=qUI.busy?'Claude 正在归类…':'例如：周五前把 new host 名单发 Nicolas / 口径：首单佣金按 10% 结算';ta.value=qUI.text;ta.disabled=qUI.busy;
+      ta.oninput=()=>{qUI.text=ta.value};autoGrow(ta,()=>quickSubmit());
+      const b=el('button',null,qUI.busy?'归类中…':'记下');b.type='submit';b.disabled=qUI.busy;
+      f.append(ta,b);f.onsubmit=e=>{e.preventDefault();quickSubmit()};box.append(f);
+      if(qUI.err)box.append(el('div','tk-fmsg err pad',qUI.err));
+    }
+    const tdk=todayKey();
+    const todays=notes.filter(n=>n.date===tdk).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const older=notes.filter(n=>n.date!==tdk&&needsAction(n)).sort((a,b)=>a.date<b.date?1:-1);
+    const ul=el('ul','quick-list');
+    const row=n=>{
+      const li=el('li','qrow');const rt=quickRoute(n);
+      li.append(longText('qtext'+(n.done?' done':''),n.text,'q-'+n.id));
+      const side=el('div','qside');side.append(el('span','qtag q-'+rt.k,rt.t));
+      if(n.date!==tdk)side.append(el('span','from',shortLabel('day',n.date)));
+      const acts=el('div','qacts');
+      if(canWrite&&db){
+        if(rt.k==='none'){acts.append(btn(null,'转待办',()=>promote(n)),btn(null,'入知识库',()=>put('notes',n.id,{cat:'rule'})))}
+        if(rt.k==='idea')acts.append(btn(null,'采纳，入知识库',()=>put('notes',n.id,{adopted:true})),btn(null,'转待办',()=>promote(n)));
+        if(rt.k==='doubt'){
+          if(qUI.ans[n.id]!=null){const ai=el('input','qans');ai.id='qa-'+n.id;ai.placeholder='确认结果';ai.value=qUI.ans[n.id];ai.oninput=()=>{qUI.ans[n.id]=ai.value};
+            const ok=()=>{const v=(qUI.ans[n.id]||'').trim();if(!v)return;delete qUI.ans[n.id];put('notes',n.id,{answer:v,done:true,doneAt:Date.now()})};
+            ai.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok()}};acts.append(ai,btn(null,'保存',ok));setTimeout(()=>{const x=$('qa-'+n.id);if(x&&document.activeElement!==x)x.focus()},0)}
+          else acts.append(btn(null,'写确认结果',()=>{qUI.ans[n.id]='';render()}));
+        }
+        if(needsAction(n))acts.append(btn(null,'暂放',()=>put('notes',n.id,{parked:true})));
+        acts.append(btn(qUI.confirm===n.id?'sure':null,qUI.confirm===n.id?'确认删除':'删除',()=>{if(qUI.confirm===n.id){qUI.confirm=null;deleteNote(n)}else{qUI.confirm=n.id;render()}}));
+      }
+      side.append(acts);li.append(side);return li;
+    };
+    for(const n of todays)ul.append(row(n));
+    if(todays.length)box.append(ul);
+    if(older.length){
+      box.append(btn('done-toggle',(qUI.showOld?'▾ 收起':'▸ ')+'之前还没归类的 '+older.length+' 条（想法 / 待确认 / 未分类）',()=>{qUI.showOld=!qUI.showOld;render()}));
+      if(qUI.showOld){const u2=el('ul','quick-list');for(const n of older)u2.append(row(n));box.append(u2)}
+    }
+    if(!todays.length&&!older.length)box.append(el('div','hint pad','今天还没有速记。'));
+  }
+  // 识别文字里的循环周期：每天 / 工作日 / 每周 / 每两周 / 每月
+  function detectRepeat(text){
+    const t=String(text||'');
+    if(/(每两周|每隔一周|隔周|双周|每2周|两周一次)/.test(t))return {level:'week',rep:'biweekly'};
+    if(/(每个?工作日|工作日每天)/.test(t))return {level:'day',rep:'weekdays'};
+    if(/(每天|每日|天天)/.test(t))return {level:'day',rep:'all'};
+    if(/(每周|每星期|每个星期|每礼拜|周周)/.test(t))return {level:'week',rep:'weekly'};
+    if(/(每个?月|每月|月度固定)/.test(t))return {level:'month',rep:'monthly'};
+    return null;
+  }
+  async function addRoutineFrom(text,rr,fromDay){
+    const rid='rt'+Date.now().toString(36)+Math.random().toString(36).slice(2,4);
+    const r={id:rid,title:goalTitle(text),level:rr.level,since:keyFor(rr.level,fromDay?parseKey(fromDay):new Date())};
+    if(rr.level==='day')r.days=rr.rep==='all'?'all':'weekdays';if(rr.rep==='biweekly')r.every=2;
+    routines=[...routines,r];await saveRoutines(routines);return rid;
+  }
+  async function promote(n){
+    const rr=detectRepeat(n.text);
+    if(rr){try{const rid=await addRoutineFrom(n.text,rr,n.date);await db.doc('notes/'+n.id).update({routineId:rid,task:true,goalId:''})}catch(e){fail(e)}return}
+    try{const gid=await addGoalFor(n.id,n.text,n.due||'');await db.doc('notes/'+n.id).update({goalId:gid,task:true})}catch(e){fail(e)}
+  }
+  // 删除时两边同步：删记录会删掉它转出的目标；删目标会把记录恢复成未转入
+  async function deleteNote(n){
+    const g=n.goalId&&goals.find(x=>x.id===n.goalId);
+    await del('notes',n.id);
+    if(g&&g.noteId===n.id)await del('goals',g.id);
+  }
+  async function deleteGoal(g){
+    await del('goals',g.id);
+    if(g.noteId&&notes.some(n=>n.id===g.noteId&&n.goalId===g.id))await put('notes',g.noteId,{goalId:''});
+  }
+  function setNoteDone(n,done){
+    put('notes',n.id,{done,doneAt:done?Date.now():null});
+    if(n.goalId&&goals.some(g=>g.id===n.goalId))put('goals',n.goalId,{status:done?'done':'todo',doneAt:done?Date.now():null});
+  }
+
+  const PREFS=(()=>{try{return JSON.parse(localStorage.getItem('lt-prefs')||'{}')}catch(e){return {}}})();
+  function savePrefs(){try{localStorage.setItem('lt-prefs',JSON.stringify(PREFS))}catch(e){}}
+  function blankNote(){return {id:null,cat:'',text:'',prog:PREFS.prog||'',track:'',teams:[],people:'',meeting:'',task:false,taskTouched:false,due:'',dueAuto:false,err:''}}
+  Object.assign(ntForm,blankNote());
+  function resetNt(){Object.assign(ntForm,blankNote())}
+  let progFilter='all';let parkOpen=false;let showFiled=false;
+  const bulk={open:false,raw:'',meeting:'',rows:[],busy:false,err:'',ctl:null};
+  let sampleFn=null;
+  const isOpen=n=>(n.task||normCat(n.cat)==='doubt')&&!n.done;
+
+  function chipGroup(list,cur,onPick,idp,multi){
+    const wrap=el('div','chips');
+    for(const it of list){
+      const on=multi?cur.includes(it.k):cur===it.k;
+      const b=btn((on?'on ':'')+(it.cls||''),it.n,()=>onPick(it.k));
+      if(idp)b.id=idp+it.k;b.setAttribute('aria-pressed',on);wrap.append(b);
+    }
+    return wrap;
+  }
+  const catList=()=>CATS.map(c=>({k:c.k,n:c.n,cls:'c-'+c.k}));
+  const progList=()=>PROGS.map(p=>({k:p.k,n:p.n,cls:'p-'+p.k}));
+  const trackList=()=>TRACKS.map(t=>({k:t.k,n:t.n,cls:'t-'+t.k}));
+  const teamList=()=>TEAMS.map(t=>({k:t,n:t,cls:'tm'}));
+  const toggle=(arr,k)=>arr.includes(k)?arr.filter(x=>x!==k):[...arr,k];
+
+  function noteMeta(n){
+    const meta=el('div','nmeta');
+    if(n.prog){const p=PROGS.find(x=>x.k===n.prog);if(p){const s=el('span','tag p-'+n.prog,p.short);meta.append(s)}}
+    if(n.track){const t=TRACKS.find(x=>x.k===n.track);if(t)meta.append(el('span','tag t-'+n.track,t.n))}
+    for(const t of (n.teams||[]))meta.append(el('span','tag tm',t));
+    if(n.people)meta.append(el('span','who','@ '+n.people));
+    if(n.meeting||n.src)meta.append(el('span','who','来源：'+(n.meeting||n.src)));
+    return meta;
+  }
+
+  function renderNotes(){
+    const box=$('notes');box.textContent='';
+    const dk=dayKey(sel);
+    const today=notes.filter(n=>n.date===dk).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    const head=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title','记事本'),el('div','range',labelFor('day',dk)+' · 规则/口径、Host 个案、优化想法、待确认'));
+    const sum=el('div','sum');
+    const tasks=today.filter(n=>n.task);
+    const s1=el('span');s1.append('记录 ',el('b',null,String(today.length)),' 条');sum.append(s1);
+    if(tasks.length){const s2=el('span');s2.append('待办 ',el('b',null,tasks.filter(n=>n.done).length+' / '+tasks.length));sum.append(s2)}
+    head.append(hl,sum);box.append(head);
+
+    const olderAll=notes.filter(n=>n.date<dk&&isOpen(n)).sort((a,b)=>a.date<b.date?-1:1);
+    const older=olderAll.filter(n=>!n.parked),parked=olderAll.filter(n=>n.parked);
+    if(olderAll.length){
+      const o=el('div','older');
+      const row=(n,isParked)=>{const r=el('div','older-row'+(isParked?' parked':''));
+        const c=normCat(n.cat);r.append(el('span','chip c-'+(c||'none'),c?catName(c):'待办'),longText('t',n.text,'o-'+n.id));
+        if(n.due)r.append(el('span','from'+(!isParked&&n.due<todayKey()?' late':''),'截止 '+shortLabel('day',n.due)));
+        r.append(el('span','from',shortLabel('day',n.date)));
+        if(canWrite&&db){
+          if(isParked)r.append(btn('res','恢复',()=>put('notes',n.id,{parked:false}),'恢复到待跟进：'+n.text));
+          else r.append(btn('res park','暂放',()=>put('notes',n.id,{parked:true}),'暂放：'+n.text));
+          r.append(btn('res',n.task?'完成':'已确认',()=>setNoteDone(n,true)));
+        }
+        return r};
+      if(older.length){o.append(el('div','older-title','之前未完成的待办 / 未解决的待确认 · '+older.length+' 项'));for(const n of older)o.append(row(n,false))}
+      if(parked.length){
+        const tg=btn('park-toggle',(parkOpen?'▾ ':'▸ ')+'暂放中 · '+parked.length+' 项（还没讨论出结果，先收起来）',()=>{parkOpen=!parkOpen;render()});
+        tg.setAttribute('aria-expanded',parkOpen);o.append(tg);
+        if(parkOpen)for(const n of parked)o.append(row(n,true));
+      }
+      box.append(o);
+    }
+
+    if(today.length){
+      const fw=el('div','filters');
+      const fc=el('div','chips');
+      const opts=[{k:'all',n:'全部'},...CATS,{k:'task',n:'待办'}];
+      for(const c of opts){
+        const n=c.k==='all'?today.length:c.k==='task'?tasks.length:today.filter(x=>normCat(x.cat)===c.k).length;
+        if(c.k!=='all'&&!n)continue;
+        const b=btn((ntFilter===c.k?'on ':'')+'f',c.n+' '+n,()=>{ntFilter=c.k;render()});b.setAttribute('aria-pressed',ntFilter===c.k);fc.append(b)}
+      const pc=el('div','chips');
+      for(const p of [{k:'all',short:'全部业务'},...PROGS]){
+        const n=p.k==='all'?0:today.filter(x=>x.prog===p.k).length;
+        if(p.k!=='all'&&!n)continue;
+        const b=btn((progFilter===p.k?'on ':'')+'f',p.short+(p.k==='all'?'':' '+n),()=>{progFilter=p.k;render()});b.setAttribute('aria-pressed',progFilter===p.k);pc.append(b)}
+      fw.append(fc);if(pc.childNodes.length>1)fw.append(pc);box.append(fw);
+      const isFiledDone=n=>n.kbStatus==='filed'&&(!n.task||n.done);
+      const filedN=today.filter(isFiledDone).length;
+      const shown=today.filter(n=>(showFiled||!isFiledDone(n))&&(ntFilter==='all'||(ntFilter==='task'?n.task:normCat(n.cat)===ntFilter))&&(progFilter==='all'||n.prog===progFilter));
+      const ul=el('ul','notes');
+      for(const n of shown){
+        const c=normCat(n.cat);
+        const li=el('li','nt'+(n.done&&n.task?' done':''));
+        const lead=el('div','lead');
+        if(n.task){const ck=btn('chk'+(n.done?' on':''),null,()=>setNoteDone(n,!n.done),(n.done?'标记为未完成：':'标记为完成：')+n.text);ck.innerHTML=CHECK;ck.disabled=!(canWrite&&db);lead.append(ck)}
+        if(c)lead.append(el('span','chip c-'+c,catName(c)));
+        else if(n.task)lead.append(el('span','chip c-none','待办'));
+        const b=el('div','body');b.append(longText('txt',n.text,'n-'+n.id));
+        if(n.answer)b.append(el('div','answer','确认结果：'+n.answer));
+        if(ansForm.id===n.id&&canWrite&&db){
+          const af=el('form','ans-form');const ai=el('textarea','grow');ai.id='ans-'+n.id;ai.placeholder='确认的结果是什么？例如：未接通的电话不算有效回访';ai.value=ansForm.text;ai.dataset.grow='1';ai.oninput=()=>{ansForm.text=ai.value};autoGrow(ai,()=>af.requestSubmit());
+          const sv=el('button','primary','保存');sv.type='submit';const cc=btn(null,'取消',()=>{ansForm.id=null;render()});
+          af.append(ai,sv,cc);af.onsubmit=e=>{e.preventDefault();const a=ansForm.text.trim();ansForm.id=null;put('notes',n.id,{done:true,doneAt:Date.now(),answer:a});};
+          b.append(af);setTimeout(()=>{const x=$('ans-'+n.id);if(x&&document.activeElement!==x)x.focus()},0);
+        }
+        const meta=noteMeta(n);if(meta.childNodes.length)b.append(meta);
+        const fl=el('div','flags');
+        if(n.due)fl.append(el('span','flag '+(!n.done&&n.due<todayKey()?'open':'due'),'截止 '+shortLabel('day',n.due)));
+        const g=n.goalId&&goals.find(x=>x.id===n.goalId);
+        if(g)fl.append(el('span','flag task','已转入'+routeLabel({level:g.level,period:g.period})));
+        else if(n.task&&!n.done)fl.append(el('span','flag task','待办'));
+        if(c==='doubt')fl.append(el('span','flag '+(n.done?'ok':'open'),n.done?'已确认':'待确认'));
+        if(c==='idea'&&n.adopted)fl.append(el('span','flag ok','已采纳'));
+        if(n.kbStatus==='filed')fl.append(el('span','flag kb','已入库'));
+        else if(isEligible(n))fl.append(el('span','flag due','待整理入库'));
+        if(n.example)fl.append(el('span','chip ex','示例'));
+        if(fl.childNodes.length)b.append(fl);
+        const acts=el('div','row-acts');
+        if(canWrite&&db){
+          if(n.task&&!n.done&&!g)acts.append(btn(null,n.due?'转入'+routeLabel(routeFor(n.due)).replace(/（.*）/,''):'转为今日任务',()=>promote(n)));
+          if(c==='doubt'&&!n.task)acts.append(btn(null,n.done?'改为待确认':'标记已确认',()=>{if(n.done)put('notes',n.id,{done:false,doneAt:null});else{ansForm.id=n.id;ansForm.text=n.answer||'';render()}}));
+          if(c==='idea')acts.append(btn(null,n.adopted?'取消采纳':'标记已采纳',()=>put('notes',n.id,{adopted:!n.adopted})));
+          acts.append(btn(null,'编辑',()=>{Object.assign(ntForm,blankNote(),{id:n.id,cat:c,text:n.text,prog:n.prog||'',track:n.track||'',teams:[...(n.teams||[])],people:n.people||'',meeting:n.meeting||n.src||'',task:!!n.task,taskTouched:true,due:n.due||'',dueAuto:false});bulk.open=false;render();const t=$('nt-text');if(t){t.focus();t.scrollIntoView({block:'nearest'})}}));
+          acts.append(btn(confirmDel.id===n.id?'sure':null,confirmDel.id===n.id?'确认删除':'删除',()=>{if(confirmDel.id===n.id){confirmDel.id=null;if(ntForm.id===n.id)resetNt();deleteNote(n)}else{confirmDel.id=n.id;render()}}));
+        }
+        li.append(lead,b,acts);ul.append(li);
+      }
+      if(filedN){const fr=el('div','filed-line');fr.append(el('span',null,(showFiled?'已入库的 '+filedN+' 条也显示在下面':filedN+' 条已入库，已移到知识库')+' · '));
+        const a=el('a',null,'去知识库查看');a.href='#kb';fr.append(a);fr.append(document.createTextNode(' · '));
+        fr.append(btn('linkish',showFiled?'隐藏':'临时显示',()=>{showFiled=!showFiled;render()}));box.append(fr)}
+      if(!shown.length)box.append(el('div','empty',filedN&&!showFiled?'今天的记录都已经入库了。':'这个筛选下没有记录。'));
+      box.append(ul);
+    } else box.append(el('div','empty',ready?'今天还没有记录。会议里定下的规则和口径、某个 host 的具体情况、可以优化的地方、拿不准要再确认的事，都可以记在这里。':'正在加载…'));
+
+    if(!(canWrite&&db))return;
+    if(bulk.open){box.append(renderBulk(dk));return}
+    box.append(renderNoteForm(dk));
+  }
+
+  function renderNoteForm(dk){
+    const f=el('form','form');f.noValidate=true;
+    const top=el('div','form-top span6');
+    top.append(el('div','form-title',ntForm.id?'修改记录':'新增记录'));
+    if(!ntForm.id){const bb=btn('linkish','粘贴会议记录，批量拆分',()=>{bulk.open=true;bulk.rows=[];bulk.err='';render();const t=$('bulk-raw');if(t)t.focus()});top.append(bb)}
+    f.append(top);
+    const cf=el('div','fld span6');cf.append('性质（选填）');cf.append(chipGroup(catList(),ntForm.cat,k=>{ntForm.cat=ntForm.cat===k?'':k;render()},'nt-cat-'));f.append(cf);
+    const tl=el('label','fld span6');tl.append('内容');const ta=el('textarea','grow');ta.id='nt-text';ta.maxLength=2000;ta.value=ntForm.text;ta.dataset.grow='1';
+    ta.placeholder='例如：不在 90 天内但属于高需求地区的机器，也可以 onboard（Enter 保存，Ctrl+Enter 换行）';
+    ta.oninput=()=>{ntForm.text=ta.value;
+      if(!ntForm.due||ntForm.dueAuto){const d=detectDue(ta.value);const ch=d!==ntForm.due;ntForm.due=d;ntForm.dueAuto=!!d;if(!ntForm.taskTouched)ntForm.task=!!d;if(ch)renderDueOnly()}};
+    autoGrow(ta,()=>f.requestSubmit());tl.append(ta);f.append(tl);
+    const pf=el('div','fld span3');pf.append('业务');
+    const pr=el('div','chip-rows');
+    pr.append(chipGroup(progList(),ntForm.prog,k=>{ntForm.prog=ntForm.prog===k?'':k;PREFS.prog=ntForm.prog;savePrefs();render()},'nt-prog-'));
+    pr.append(chipGroup(trackList(),ntForm.track,k=>{ntForm.track=ntForm.track===k?'':k;render()},'nt-track-'));
+    pf.append(pr);f.append(pf);
+    const wf=el('div','fld span3');wf.append('相关方');
+    const wr=el('div','chip-rows');
+    wr.append(chipGroup(teamList(),ntForm.teams,k=>{ntForm.teams=toggle(ntForm.teams,k);render()},'nt-team-',true));
+    const pi=el('input');pi.id='nt-people';pi.maxLength=80;pi.placeholder='人名，如 Jessie、Nicolas';pi.value=ntForm.people;pi.oninput=()=>{ntForm.people=pi.value};
+    wr.append(pi);wf.append(wr);f.append(wf);
+    const ml=el('label','fld span3');ml.append('来源会议（选填）');const mi=el('input');mi.id='nt-meeting';mi.maxLength=80;mi.placeholder='例如：Demo Room 周会';mi.value=ntForm.meeting;mi.oninput=()=>{ntForm.meeting=mi.value};ml.append(mi);f.append(ml);
+    const dl=el('div','fld span3');dl.id='nt-due-wrap';fillDue(dl);f.append(dl);
+    const acts=el('div','form-acts span6');
+    const sb=el('button','primary',ntForm.id?'保存修改':'添加记录');sb.type='submit';acts.append(sb);
+    if(ntForm.id)acts.append(btn(null,'取消',()=>{resetNt();render()}));
+    if(ntForm.err)acts.append(el('span','err',ntForm.err));
+    f.append(acts);
+    f.onsubmit=e=>{
+      e.preventDefault();const text=ntForm.text.trim();
+      if(!text){ntForm.err='请填写内容。';render();return}
+      const data={cat:ntForm.cat,text,prog:ntForm.prog,track:ntForm.track,teams:ntForm.teams,people:ntForm.people.trim(),meeting:ntForm.meeting.trim(),task:ntForm.task,due:ntForm.task?ntForm.due:''};
+      const id=ntForm.id;if(!id)data.date=dk;
+      const keepProg=ntForm.prog,keepMeeting=ntForm.meeting;resetNt();if(!id){ntForm.meeting=keepMeeting;ntForm.prog=keepProg}render();
+      saveNote(data,id);
+    };
+    return f;
+  }
+  function fillDue(dl){
+    dl.textContent='';dl.append('待办与截止日');
+    const row=el('div','due-row');
+    const cl=el('label','chk-line');const cb=el('input');cb.type='checkbox';cb.id='nt-task';cb.checked=ntForm.task;cb.onchange=()=>{ntForm.task=cb.checked;ntForm.taskTouched=true;renderDueOnly()};cl.append(cb,'作为待办跟进');
+    const di=el('input');di.type='date';di.id='nt-due';di.value=ntForm.due;di.disabled=!ntForm.task;di.setAttribute('aria-label','会议日期');
+    di.onchange=()=>{ntForm.due=di.value;ntForm.dueAuto=false;renderDueOnly()};
+    row.append(cl,di);dl.append(row);
+    if(ntForm.task){
+      const r=routeFor(ntForm.due);
+      dl.append(el('div','hint',(ntForm.dueAuto&&ntForm.due?'已从文字识别截止日 '+shortLabel('day',ntForm.due)+'。':'')+(ntForm.id&&notes.find(n=>n.id===ntForm.id&&n.goalId)?'':(ntForm.due?'保存后自动转入'+routeLabel(r)+'。':'没有截止日的待办，可在保存后点「转为今日任务」。'))));
+    }
+  }
+  function renderDueOnly(){const dl=$('nt-due-wrap');if(dl)fillDue(dl)}
+
+  /* 批量：粘贴会议记录 → 拆分 → 确认 → 保存 */
+  /* 按用户自己的结构解析：
+     - 标题行（以 ：/: 结尾的短行、【…】、# 开头）不是条目，而是给下面各条的分类提示
+     - 用了编号（1. 1、 (1)）时，编号之间的多行算同一条；没用编号时一行一条
+     - 用户写明的分类（标题或行首【规则】等）优先，Claude 只补用户没写的部分，绝不拆分或合并 */
+  const HINTS=[
+    [/规则|口径|结论|定了/,{cat:'rule'}],[/个案|案例|case/i,{cat:'case'}],[/想法|优化|建议|idea/i,{cat:'idea'}],
+    [/待确认|存疑|疑问|问题|不确定/,{cat:'doubt'}],[/待办|to\s*do|todo|task|任务/i,{task:true}],
+    [/demo\s*room|drh|host\s*program/i,{prog:'drh'}],[/impact|affiliate|联盟/i,{prog:'impact'}],
+    [/现行/,{track:'current'}],[/待优化/,{track:'optimize'}]
+  ];
+  function hintsOf(t){
+    const h={};for(const [re,v] of HINTS)if(re.test(t))Object.assign(h,v);
+    const tm=TEAMS.filter(x=>new RegExp('(^|[^A-Za-z])'+x+'([^A-Za-z]|$)').test(t));if(tm.length)h.teams=tm;
+    return h;
+  }
+  function isHeader(line){
+    const t=line.trim();
+    if(/^#+\s*\S/.test(t))return true;
+    if(/^【[^】]{1,20}】$/.test(t))return true;
+    if(/^[^，。；,;]{1,20}[：:]$/.test(t))return true;
+    return false;
+  }
+  const NUM=/^\s*(?:\d{1,2}(?:\.(?!\d)|[、)）])|[（(]\d{1,2}[)）]|[一二三四五六七八九十]+[、.])\s*/;
+  const BUL=/^\s*[-*•·]\s*/;
+  function parseItems(raw){
+    const lines=String(raw).split(/\n/);
+    const numbered=lines.some(l=>NUM.test(l));
+    const items=[];let ctx={};let cur=null;
+    for(const line of lines){
+      if(!line.trim()){if(!numbered)cur=null;continue}
+      if(isHeader(line)){ctx=hintsOf(line.replace(/[#【】：:]/g,''));cur=null;continue}
+      const isNew=numbered?NUM.test(line):true;
+      let text=line.replace(NUM,'').replace(BUL,'').trim();
+      // 行首自带标签，如【规则】xxx / [待办] xxx
+      const tag=text.match(/^[【\[]([^】\]]{1,12})[】\]]\s*/);let own={};
+      if(tag){own=hintsOf(tag[1]);text=text.slice(tag[0].length)}
+      if(isNew||!cur){cur={text,hint:tag?own:Object.assign({},ctx)};items.push(cur)}
+      else cur.text+='\n'+line.replace(BUL,'- ').trim();
+    }
+    return items.filter(i=>i.text.trim());
+  }
+  function rowFrom(o,hint){
+    hint=hint||{};
+    const text=String(o.text||'').trim();
+    let due=typeof o.due==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(o.due)?o.due:'';
+    if(!due)due=detectDue(text);
+    const cat=hint.cat||normCat(o.cat);
+    const prog=hint.prog||(PROGS.some(p=>p.k===o.prog)?o.prog:(PREFS.prog||''));
+    const track=hint.track||(TRACKS.some(t=>t.k===o.track)?o.track:'');
+    const teams=hint.teams||(Array.isArray(o.teams)?o.teams.map(String).filter(t=>TEAMS.includes(t)):[]);
+    const task=hint.task?true:(o.task===true||(o.task===undefined&&!!due));
+    return {text,cat,prog,track,teams,people:String(o.people||'').slice(0,80),task,due};
+  }
+  async function bulkSplit(useAI){
+    const items=parseItems(bulk.raw);
+    if(!items.length){bulk.err='先粘贴会议记录。';render();return}
+    bulk.err='';
+    const plain=()=>items.map(it=>rowFrom({text:it.text},it.hint));
+    if(!useAI||!sampleFn){bulk.rows=plain();render();return}
+    bulk.busy=true;bulk.ctl=new AbortController();render();
+    const now=new Date();
+    const prompt=[
+      '你在帮一位 OMTech 员工给她已经整理好的会议记录打标签。她负责 Demo Room Host Program 和 Impact Affiliate 两块业务。',
+      '今天是 '+dayKey(now)+'（'+WD[now.getDay()]+'），本周一是 '+dayKey(mondayOf(now))+'。',
+      '下面的条目已经由她本人分好了，每个编号就是一条。严格保持条数和顺序：不要拆分、不要合并、不要改写，text 原样返回。',
+      '如果条目后面的「已标注」里写了某个字段，就照抄，不要改。只补充没标注的字段：',
+      '- cat：rule（已定下的规则、做法、口径）| case（某个具体 host 或客户的情况）| idea（可以优化、改进的想法）| doubt（拿不准、需要再确认）| ""（纯待办或无法判断）',
+      '- prog：drh | impact | ""；track：current（现行业务）| optimize（待优化业务）| ""',
+      '- teams：数组，只能取 "TS"、"MKT"、"OP"；people：涉及的人名，没有就 ""',
+      '- task：是否是需要她去做的待办（true/false）；due：截止日 YYYY-MM-DD，没有明确日期就 ""',
+      '只回复一个 JSON 数组，长度必须是 '+items.length+'，例如：[{"i":1,"text":"…","cat":"rule","prog":"drh","track":"current","teams":[],"people":"","task":false,"due":""}]',
+      '','条目：',...items.map((it,i)=>(i+1)+'. '+it.text.replace(/\n/g,' / ')+(Object.keys(it.hint).length?'　（已标注：'+JSON.stringify(it.hint)+'）':''))
+    ].join('\n');
+    try{
+      const out=await sampleFn.json(prompt,{modelTier:'quick',signal:bulk.ctl.signal});
+      const arr=Array.isArray(out)?out:(out&&Array.isArray(out.items)?out.items:[]);
+      // 文字始终用她的原文；Claude 只提供标签，按序号对应
+      bulk.rows=items.map((it,i)=>{const o=arr.find(x=>Number(x&&x.i)===i+1)||arr[i]||{};return rowFrom(Object.assign({},o,{text:it.text}),it.hint)});
+      if(!arr.length)bulk.err='Claude 没有返回标签，已按你的分行导入，请手动选择分类。';
+    }catch(e){
+      bulk.rows=plain();
+      if(e&&(e.code==='not_granted'||e.code==='sampling_disabled'||e.code==='not_declared'||e.code==='capability_disabled'||e.code==='capability_removed'))sampleFn=null;
+      bulk.err=e&&e.code==='cancelled'?'已停止，已按你的分行导入。':e&&e.code==='rate_limited'?'Claude 暂时太忙，已按你的分行导入，可稍后再试。':'没能拿到 Claude 的建议，已按你的分行导入，请手动选择分类。';
+    }
+    bulk.busy=false;bulk.ctl=null;render();
+  }
+  async function saveBulkRow(r,dk){
+    if(!r.text.trim()||r.saving)return;
+    r.saving=true;render();
+    await saveNote({date:dk,cat:r.cat,text:r.text.trim(),prog:r.prog,track:r.track,teams:r.teams,people:r.people.trim(),meeting:bulk.meeting.trim(),task:r.task,due:r.task?r.due:''});
+    if(r.prog){PREFS.prog=r.prog;savePrefs()}
+    bulk.rows=bulk.rows.filter(x=>x!==r);bulk.saved=(bulk.saved||0)+1;
+    if(!bulk.rows.length)Object.assign(bulk,{open:false,raw:'',meeting:'',rows:[],busy:false,err:'',saved:0});
+    render();
+  }
+  async function bulkSave(dk){
+    const rows=bulk.rows.filter(r=>r.text.trim());
+    if(!rows.length){bulk.err='没有可保存的条目。';render();return}
+    bulk.busy=true;render();
+    const meeting=bulk.meeting.trim();
+    for(const r of rows){await saveNote({date:dk,cat:r.cat,text:r.text.trim(),prog:r.prog,track:r.track,teams:r.teams,people:r.people.trim(),meeting,task:r.task,due:r.task?r.due:''})}
+    if(rows[0].prog){PREFS.prog=rows[0].prog;savePrefs()}
+    Object.assign(bulk,{open:false,raw:'',meeting:'',rows:[],busy:false,err:'',saved:0});render();
+  }
+  function sel1(id,list,cur,onch,blank){
+    const s=el('select');s.id=id;
+    const o0=el('option',null,blank);o0.value='';s.append(o0);
+    for(const it of list){const o=el('option',null,it.n);o.value=it.k;if(it.k===cur)o.selected=true;s.append(o)}
+    s.onchange=()=>onch(s.value);return s;
+  }
+  function renderBulk(dk){
+    const f=el('form','form bulk');f.noValidate=true;f.onsubmit=e=>{e.preventDefault()};
+    const top=el('div','form-top span6');top.append(el('div','form-title','批量添加：粘贴会议记录'));
+    top.append(btn('linkish','改为单条添加',()=>{if(bulk.ctl)bulk.ctl.abort();Object.assign(bulk,{open:false,rows:[],err:'',busy:false});render()}));
+    f.append(top);
+    if(!bulk.rows.length){
+      const rl=el('label','fld span6');rl.append('会议记录（按你的分行和编号导入：没编号时一行一条，有编号时同一编号下的多行算一条；「规则：」「【待办】」这类标题或行首标签会直接作为分类）');
+      const ta=el('textarea','grow');ta.id='bulk-raw';ta.value=bulk.raw;ta.dataset.grow='1';ta.placeholder='直接粘贴，例如：\n零件更换问题，先问 Jessie 意见再回复 host\nVCS training 一周没进行需要 TS 打电话\n10.15 前把 Shane 合同发给法务';
+      ta.oninput=()=>{bulk.raw=ta.value};autoGrow(ta);rl.append(ta);f.append(rl);
+      const ml=el('label','fld span3');ml.append('来源会议（选填，会用在每一条上）');const mi=el('input');mi.id='bulk-meeting';mi.maxLength=80;mi.value=bulk.meeting;mi.placeholder='例如：Demo Room 周会';mi.oninput=()=>{bulk.meeting=mi.value};ml.append(mi);f.append(ml);
+      const acts=el('div','form-acts span6');
+      if(bulk.busy){acts.append(el('span','hint','Claude 正在拆分和分类…'));acts.append(btn(null,'停止',()=>{if(bulk.ctl)bulk.ctl.abort()}))}
+      else{
+        if(sampleFn)acts.append(btn('primary','导入并让 Claude 补充标签',()=>bulkSplit(true)));
+        acts.append(btn(sampleFn?null:'primary','只导入，不打标签',()=>bulkSplit(false)));
+      }
+      if(bulk.err)acts.append(el('span','err',bulk.err));
+      f.append(acts);
+      return f;
+    }
+    const meta=el('div','span6 hint','还剩 '+bulk.rows.length+' 条'+(bulk.saved?'（已保存 '+bulk.saved+' 条）':'')+'，确认或修改后保存到 '+md(dk)+'。可以逐条点「保存这条」，也可以最后一次性全部保存。带截止日的待办会自动转入对应的周 / 月目标。');
+    f.append(meta);
+    const list=el('ol','bulk-rows span6');
+    bulk.rows.forEach((r,i)=>{
+      const li=el('li','brow');
+      const ta=el('textarea','grow');ta.id='bulk-'+i+'-text';ta.value=r.text;ta.dataset.grow='1';ta.setAttribute('aria-label','第 '+(i+1)+' 条内容');
+      ta.oninput=()=>{r.text=ta.value};autoGrow(ta);
+      const ctr=el('div','bctl');
+      ctr.append(sel1('bulk-'+i+'-cat',CATS,r.cat,v=>{r.cat=v},'性质'));
+      ctr.append(sel1('bulk-'+i+'-prog',PROGS.map(p=>({k:p.k,n:p.short})),r.prog,v=>{r.prog=v},'业务'));
+      ctr.append(sel1('bulk-'+i+'-track',TRACKS,r.track,v=>{r.track=v},'现行/待优化'));
+      const tg=chipGroup(teamList(),r.teams,k=>{r.teams=toggle(r.teams,k);render()},'bulk-'+i+'-team-',true);ctr.append(tg);
+      const pi=el('input');pi.id='bulk-'+i+'-people';pi.placeholder='人名';pi.value=r.people;pi.oninput=()=>{r.people=pi.value};pi.className='mini';ctr.append(pi);
+      const cl=el('label','chk-line');const cb=el('input');cb.type='checkbox';cb.id='bulk-'+i+'-task';cb.checked=r.task;cb.onchange=()=>{r.task=cb.checked;render()};cl.append(cb,'待办');ctr.append(cl);
+      const di=el('input');di.type='date';di.id='bulk-'+i+'-due';di.value=r.due;di.disabled=!r.task;di.className='mini';di.setAttribute('aria-label','会议日期');di.onchange=()=>{r.due=di.value;render()};ctr.append(di);
+      if(r.task&&r.due)ctr.append(el('span','hint','→ '+routeLabel(routeFor(r.due))));
+      const ra=el('div','brow-acts');
+      const sv=btn('bsave',r.saving?'保存中…':'保存这条',()=>saveBulkRow(r,dk),'保存第 '+(i+1)+' 条');sv.disabled=!!r.saving||!r.text.trim();
+      const rm=btn('rm','移除',()=>{bulk.rows.splice(i,1);render()},'移除第 '+(i+1)+' 条');
+      ra.append(sv,rm);
+      li.append(ta,ctr,ra);list.append(li);
+    });
+    f.append(list);
+    const acts=el('div','form-acts span6');
+    if(bulk.busy)acts.append(el('span','hint','正在保存…'));
+    else{
+      acts.append(btn('primary','全部保存（'+bulk.rows.length+' 条）',()=>bulkSave(dk)));
+      acts.append(btn(null,'返回修改原文',()=>{bulk.rows=[];render()}));
+    }
+    if(bulk.err)acts.append(el('span','err',bulk.err));
+    f.append(acts);
+    return f;
+  }
+
+  /* ---------- 周报 ---------- */
+  function buildReport(){
+    const wk=weekKey(sel);const days=weekDays(wk);const inWeek=k=>days.includes(k);
+    const mk=monthKey(sel);const nwk=nextKey('week',wk);
+    const L=[];
+    L.push('【周报】'+wk.replace('-W','年第')+'周（'+labelFor('week',wk)+'）');
+    L.push('');
+    // 一、目标进度
+    const wg=[...routinesFor(wk,'week'),...goals.filter(g=>g.level==='week'&&g.period===wk&&!g.routine)];
+    const wgDone=wg.filter(g=>g.status==='done');
+    const pushed=goals.filter(g=>g.level==='week'&&(g.history||[]).includes(wk)&&g.period!==wk);
+    const mg=[...routinesFor(mk,'month'),...goals.filter(g=>g.level==='month'&&g.period===mk&&!g.routine)];
+    const dg=goals.filter(g=>g.level==='day'&&inWeek(g.period)&&!g.routine);
+    const rtDays=days.filter(k=>k<=todayKey());const rtAll=rtDays.flatMap(k=>routinesFor(k,"day"));const rtDone=rtAll.filter(g=>g.status==='done').length;
+    const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+    L.push('一、目标进度');
+    L.push('· 本周计划：完成 '+wgDone.length+' / '+(wg.length+pushed.length)+'（'+pct(wgDone.length,wg.length+pushed.length)+'）');
+    for(const g of wgDone)L.push('  ✓ '+g.title);
+    for(const g of wg.filter(g=>g.status!=='done'))L.push('  ○ '+g.title+'（进行中）');
+    for(const g of pushed)L.push('  → '+g.title+'（顺延至'+shortLabel('week',g.period)+(g.status==='done'?'，已完成':'')+'）');
+    if(mg.length){const d=mg.filter(g=>g.status==='done').length;L.push('· '+Number(mk.split('-')[1])+'月目标：完成 '+d+' / '+mg.length+'（'+pct(d,mg.length)+'）');
+      for(const g of mg.filter(g=>g.status!=='done'))L.push('  ○ '+g.title)}
+    if(dg.length){const d=dg.filter(g=>g.status==='done').length;L.push('· 每日任务：本周 '+dg.length+' 项，完成 '+d+' 项（'+pct(d,dg.length)+'）')}
+    if(rtAll.length)L.push('· 每日固定目标：完成 '+rtDone+' / '+rtAll.length+' 次（'+pct(rtDone,rtAll.length)+'）');
+    if(!wg.length&&!pushed.length&&!mg.length&&!dg.length&&!rtAll.length)L.push('· 本周暂无目标记录');
+    L.push('');
+    // 二、会议
+    const ev=days.flatMap(k=>events.filter(e=>occursOn(e,k)));
+    if(ev.length){const c=k=>ev.filter(e=>(e.kind||'other')===k).length;
+      L.push('二、会议与讨论：会议 '+c('meeting')+' 场，讨论 '+c('discussion')+' 场'+(c('other')?'，其他 '+c('other')+' 项':''));
+      const tps=tasks.filter(t=>inWeek(t.evDate||t.due||'')&&tkItems(t).some(i=>i.outcome&&i.outcome.trim())).sort((a,b)=>(a.evDate||a.due)<(b.evDate||b.due)?-1:1);
+      for(const t of tps){L.push('· '+shortLabel('day',t.evDate||t.due)+' '+(t.title||'会议')+' 结论：');for(const i of tkItems(t))if(i.outcome&&i.outcome.trim())L.push('  - '+i.text.split('\n')[0]+'：'+i.outcome.trim().replace(/\s*\n\s*/g,'；'))}
+      L.push('')}
+    // 三、Learnings：按业务 → 现行/待优化分组，规则/口径标【规则】
+    const nt=notes.filter(n=>inWeek(n.date)&&!(n.task&&!normCat(n.cat)));
+    const num=ev.length?'三':'二';
+    L.push(num+'、本周 Learnings（'+nt.length+' 条）');
+    if(!nt.length)L.push('· 暂无记录');
+    const groups=[...PROGS.map(p=>({k:p.k,n:p.n})),{k:'',n:'其他'}];
+    const tag=n=>{const c=normCat(n.cat);return c==='rule'?'【规则】':c==='case'?'【个案】':c==='idea'?'【优化】':c==='doubt'?(n.done?'【已确认】':'【待确认】'):''};
+    for(const g of groups){
+      const xs=nt.filter(n=>(n.prog||'')===g.k);if(!xs.length)continue;
+      L.push('· '+g.n+'：');
+      const tracks=[...TRACKS,{k:'',n:''}];
+      for(const t of tracks){
+        const ys=xs.filter(n=>(n.track||'')===t.k).sort((a,b)=>(normCat(a.cat)==='rule'?0:1)-(normCat(b.cat)==='rule'?0:1));
+        if(!ys.length)continue;
+        if(t.n)L.push('  '+t.n+'：');
+        for(const n of ys)L.push((t.n?'   - ':'  - ')+tag(n)+n.text.replace(/\s*\n\s*/g,'；'));
+      }
+    }
+    L.push('');
+    // 四、待跟进
+    const nextNum=ev.length?'四':'三';
+    const openTasks=notes.filter(n=>n.task&&!n.done&&n.date<=days[6]);
+    const openDoubts=notes.filter(n=>normCat(n.cat)==='doubt'&&!n.done&&!n.task&&n.date<=days[6]);
+    L.push(nextNum+'、待跟进');
+    if(!openTasks.length&&!openDoubts.length)L.push('· 无');
+    for(const n of openTasks)L.push('· [待办] '+n.text.replace(/\s*\n\s*/g,'；')+(n.due?'（截止 '+shortLabel('day',n.due)+'）':''));
+    for(const n of openDoubts)L.push('· [待确认] '+n.text);
+    L.push('');
+    // 五、下周计划
+    const lastNum=ev.length?'五':'四';
+    const ng=goals.filter(g=>g.level==='week'&&g.period===nwk);
+    L.push(lastNum+'、下周计划（'+labelFor('week',nwk)+'）');
+    if(!ng.length)L.push('· 待补充');
+    for(const g of ng)L.push('· '+g.title+((g.history||[]).length?'（顺延）':''));
+    return L.join('\n');
+  }
+  function renderReport(){
+    const box=$('report');box.hidden=!reportOpen;if(!reportOpen){box.textContent='';return}
+    const prev=$('report-text');const keep=prev&&prev.dataset.edited==='1'&&prev.dataset.wk===weekKey(sel)?prev.value:null;
+    box.textContent='';
+    const wk=weekKey(sel);
+    const head=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title','周报'),el('div','range',labelFor('week',wk)+' · 根据本周目标、日程和 Learnings 自动汇总，可直接修改后复制'));
+    const acts=el('div','acts');
+    acts.append(btn('btn primary','复制周报',ev=>{const t=$('report-text');copyText(t.value,ev.currentTarget);t.select()}));
+    acts.append(btn('btn','重新生成',()=>{const t=$('report-text');if(t)t.dataset.edited='0';render()}));
+    acts.append(btn('btn','收起',()=>{reportOpen=false;render()}));
+    head.append(hl,acts);box.append(head);
+    const ta=el('textarea');ta.id='report-text';ta.setAttribute('aria-label','周报内容');ta.dataset.wk=wk;
+    ta.value=keep!=null?keep:buildReport();ta.dataset.edited=keep!=null?'1':'0';
+    ta.oninput=()=>{ta.dataset.edited='1'};
+    box.append(ta);
+  }
+
+  /* ---------- 知识库 ---------- */
+  let view=location.hash==='#kb'?'kb':'desk';
+  window.addEventListener('hashchange',()=>{view=location.hash==='#kb'?'kb':'desk';render();window.scrollTo(0,0)});
+  let kbItems=[],kbReady=false,kbConfig=null,kbDraft=null;
+  const ansForm={id:null,text:''};
+  const TOPICS_DEFAULT={drh:['招募与筛选标准','Onboard 与合同','VCS 培训','Host 页面与隐私','售后与零件','EDM 与推广','数据与复盘'],impact:['合作方招募','佣金与结算','推广素材与链接','数据与复盘']};
+  const kbUI={openItems:new Set(),prog:'all',topic:'',q:'',edit:null,confirmDel:null,manage:false,newTopic:{drh:'',impact:''},ask:'',answer:'',asking:false,askErr:'',askCtl:null,sorting:false,sortErr:'',sortCtl:null,draftEdit:null,manual:null};
+  function topics(prog){const t=kbConfig&&kbConfig.topics&&kbConfig.topics[prog];return Array.isArray(t)&&t.length?t:TOPICS_DEFAULT[prog]||[]}
+  async function saveTopics(prog,list){
+    const all={drh:topics('drh'),impact:topics('impact')};all[prog]=list;
+    try{await db.doc('kbmeta/config').set(Object.assign({},kbConfig||{},{topics:all}))}catch(e){fail(e)}
+  }
+  function isEligible(n){
+    if(n.kbStatus)return false;
+    const c=normCat(n.cat);
+    return c==='rule'||c==='case'||(c==='idea'&&!!n.adopted)||(c==='doubt'&&!!n.done);
+  }
+  function pendingNotes(){return notes.filter(isEligible).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.createdAt||0)-(b.createdAt||0))}
+  function noteBrief(n){return n.text+(n.answer?'（确认结果：'+n.answer+'）':'')}
+  function srcOf(n){return {noteId:n.id,date:n.date,meeting:n.meeting||n.src||'',people:n.people||''}}
+  const progName=k=>(PROGS.find(p=>p.k===k)||{n:'未分业务'}).n;
+  const progShort=k=>(PROGS.find(p=>p.k===k)||{short:'未分业务'}).short;
+  function fmtTs(ts){if(!ts)return '';const d=new Date(ts);return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()}
+  function fmtDay(k){if(!k)return '';const [y,m,d]=k.split('-').map(Number);return y+'/'+m+'/'+d}
+
+  // 把一条「整理建议」写进知识库
+  async function applyProposal(p){
+    const ns=(p.noteIds||[]).map(id=>notes.find(n=>n.id===id)).filter(Boolean);
+    const sources=ns.map(srcOf);
+    const caseTexts=ns.filter(n=>normCat(n.cat)==='case').map(n=>({text:noteBrief(n),date:n.date,noteId:n.id}));
+    let itemId=p.itemId;
+    const cur=itemId&&kbItems.find(i=>i.id===itemId);
+    if(p.action==='new'||!cur){
+      const ref=db.collection('kb_items').doc();itemId=ref.id;
+      await ref.set({prog:p.prog||'',topic:p.topic||'',title:p.title||'未命名条目',summary:p.summary||'',detail:p.detail||'',cases:caseTexts,sources,history:[],createdAt:Date.now(),updatedAt:Date.now()});
+    } else {
+      const patch={updatedAt:Date.now(),sources:[...(cur.sources||[]),...sources]};
+      if(p.action==='case'){patch.cases=[...(cur.cases||[]),...(caseTexts.length?caseTexts:ns.map(n=>({text:noteBrief(n),date:n.date,noteId:n.id})))]}
+      else{
+        if(p.action==='update'&&(p.summary!==cur.summary||p.detail!==cur.detail))patch.history=[...(cur.history||[]),{summary:cur.summary,detail:cur.detail,until:Date.now(),from:cur.updatedAt||cur.createdAt||null}];
+        if(p.title)patch.title=p.title;if(p.summary)patch.summary=p.summary;if(p.detail!=null)patch.detail=p.detail;
+        if(caseTexts.length)patch.cases=[...(cur.cases||[]),...caseTexts];
+        if(p.topic)patch.topic=p.topic;if(p.prog)patch.prog=p.prog;
+      }
+      await db.doc('kb_items/'+itemId).update(patch);
+    }
+    for(const n of ns)await db.doc('notes/'+n.id).update({kbStatus:'filed',kbItem:itemId});
+  }
+  async function confirmDraft(){
+    if(!kbDraft)return;
+    const chosen=kbDraft.proposals.filter(p=>p.include!==false);
+    kbUI.sorting=true;render();
+    try{
+      for(const p of chosen)await applyProposal(p);
+      await db.doc('kbmeta/draft').delete();
+    }catch(e){fail(e)}
+    kbUI.sorting=false;kbUI.draftEdit=null;render();
+  }
+  async function discardDraft(){try{await db.doc('kbmeta/draft').delete()}catch(e){fail(e)}}
+  async function saveDraft(){try{await db.doc('kbmeta/draft').set({proposals:kbDraft.proposals,createdAt:kbDraft.createdAt||Date.now()})}catch(e){fail(e)}}
+
+  async function runSort(){
+    const pend=pendingNotes();if(!pend.length||!sampleFn)return;
+    kbUI.sorting=true;kbUI.sortErr='';kbUI.sortCtl=new AbortController();render();
+    const prompt=[
+      '你在帮 OMTech 的 Sophia 整理工作知识库。她负责 Demo Room Host Program（drh）和 Impact Affiliate（impact）。',
+      '主题目录：',
+      'drh：'+topics('drh').join(' / '),
+      'impact：'+topics('impact').join(' / '),
+      '','知识库现有条目（id | 业务 | 主题 | 标题 | 结论）：',
+      ...(kbItems.length?kbItems.map(i=>i.id+' | '+i.prog+' | '+i.topic+' | '+i.title+' | '+i.summary):['（暂无）']),
+      '','待整理的新记录（id | 日期 | 性质 | 业务 | 内容）：',
+      ...pend.map(n=>n.id+' | '+n.date+' | '+(normCat(n.cat)||'-')+' | '+(n.prog||'-')+' | '+noteBrief(n).replace(/\n/g,' ')),
+      '','把每条新记录归入知识库。规则：',
+      '- 内容相同或高度重叠的多条记录合成一条建议（noteIds 列出所有相关记录）。',
+      '- action：new（新条目）| merge（补充到已有条目，不改变原意）| update（规则变了，替换已有条目的结论）| case（作为已有条目下的个案）。merge/update/case 必须给 itemId。',
+      '- 性质为 case 的记录，若有对应规则条目就用 case 挂上去，否则 new。',
+      '- title：10 字左右，写成能搜索到的名字；summary：一句话结论；detail：细节和适用条件，没有就 ""。用她原文的用词，不要编造记录里没有的内容。',
+      '- topic 必须从对应业务的主题目录里选；prog 为 drh 或 impact。',
+      '只回复一个 JSON 数组，例如：[{"noteIds":["a1"],"action":"new","itemId":"","prog":"drh","topic":"VCS 培训","title":"…","summary":"…","detail":""}]'
+    ].join('\n');
+    try{
+      const out=await sampleFn.json(prompt,{signal:kbUI.sortCtl.signal,cache:false});
+      const arr=Array.isArray(out)?out:[];
+      const valid=new Set(pend.map(n=>n.id));
+      const proposals=arr.map((o,i)=>{
+        const ids=(Array.isArray(o.noteIds)?o.noteIds:[]).map(String).filter(id=>valid.has(id));
+        const prog=o.prog==='impact'?'impact':'drh';
+        let action=['new','merge','update','case'].includes(o.action)?o.action:'new';
+        const itemId=kbItems.some(x=>x.id===o.itemId)?String(o.itemId):'';
+        if(action!=='new'&&!itemId)action='new';
+        const topic=topics(prog).includes(o.topic)?o.topic:topics(prog)[0];
+        return {key:'p'+Date.now()+i,noteIds:ids,action,itemId,prog,topic,title:String(o.title||'').slice(0,60),summary:String(o.summary||''),detail:String(o.detail||''),include:true};
+      }).filter(p=>p.noteIds.length);
+      const covered=new Set(proposals.flatMap(p=>p.noteIds));
+      for(const n of pend)if(!covered.has(n.id))proposals.push({key:'m'+n.id,noteIds:[n.id],action:'new',itemId:'',prog:n.prog==='impact'?'impact':'drh',topic:topics(n.prog==='impact'?'impact':'drh')[0],title:n.text.slice(0,16),summary:noteBrief(n),detail:'',include:true});
+      kbDraft={proposals,createdAt:Date.now()};await saveDraft();
+    }catch(e){
+      if(e&&['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(e.code))sampleFn=null;
+      kbUI.sortErr=e&&e.code==='cancelled'?'已停止。':e&&e.code==='rate_limited'?'Claude 暂时太忙，请稍后再试。':'没能拿到整理建议，可以再试一次，或在下方逐条手动收录。';
+    }
+    kbUI.sorting=false;kbUI.sortCtl=null;render();
+  }
+
+  async function runAsk(){
+    const q=kbUI.ask.trim();if(!q||!sampleFn)return;
+    kbUI.asking=true;kbUI.answer='';kbUI.askErr='';kbUI.askCtl=new AbortController();render();
+    const lines=kbItems.map(i=>'【'+i.title+'】（'+progShort(i.prog)+' / '+i.topic+'）'+i.summary+(i.detail?' 细节：'+i.detail.replace(/\n/g,' '):'')+((i.cases||[]).length?' 个案：'+i.cases.map(c=>c.text).join('；'):''));
+    const pend=pendingNotes().map(n=>'【待整理 '+n.date+'】'+noteBrief(n).replace(/\n/g,' '));
+    const prompt=['下面是 Sophia 的工作知识库（OMTech Demo Room Host Program 与 Impact Affiliate）。只根据这些内容回答她的问题，用中文，简洁。',
+      '回答后另起一行写「来源：」并列出用到的条目标题（用【】括起来）。如果知识库里没有答案，直接说没有记录，并建议她去问谁或补充什么，不要猜。',
+      '','知识库：',...(lines.length?lines:['（暂无条目）']),...(pend.length?['','尚未整理的记录：',...pend]:[]),'','问题：'+q].join('\n');
+    try{
+      await sampleFn(prompt,{signal:kbUI.askCtl.signal,onText:({text})=>{kbUI.answer=text;const a=$('kb-answer');if(a)a.textContent=text}});
+    }catch(e){
+      if(e&&e.text)kbUI.answer=e.text;
+      if(e&&['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(e.code))sampleFn=null;
+      if(!(e&&e.code==='cancelled'))kbUI.askErr=e&&e.code==='rate_limited'?'Claude 暂时太忙，请稍后再试。':'没能拿到回答，请再试一次。';
+    }
+    kbUI.asking=false;kbUI.askCtl=null;render();
+  }
+
+  function matchQ(s){const q=kbUI.q.trim().toLowerCase();return !q||String(s||'').toLowerCase().includes(q)}
+  function itemText(i){return [i.title,i.summary,i.detail,i.topic,...(i.cases||[]).map(c=>c.text),...(i.sources||[]).map(s=>(s.meeting||'')+' '+(s.people||''))].join(' ')}
+
+  function renderKB(){
+    const box=$('kb');box.textContent='';
+    if(!db){box.append(el('div','empty','知识库暂时无法加载，请登录后刷新页面。'));return}
+    const pend=pendingNotes();
+    // 头部
+    const head=el('section','panel kb-head');
+    const ph=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title','知识库'),el('div','range','日常在工作台记录，每周整理一次入库。按业务和主题查找，或者直接提问。'));
+    const sum=el('div','sum');
+    const s1=el('span');s1.append('条目 ',el('b',null,String(kbItems.length)));sum.append(s1);
+    const s2=el('span');s2.append('待整理 ',el('b',null,String(pend.length)));sum.append(s2);
+    ph.append(hl,sum);head.append(ph);
+    // 提问
+    const askF=el('form','kb-ask');askF.noValidate=true;
+    const ai=el('textarea','grow');ai.id='kb-ask-in';ai.dataset.grow='1';ai.placeholder=sampleFn?'直接提问，例如：拥有产品不满 3 个月的申请人能不能 onboard？':'提问需要 Claude，当前不可用；可以用下方搜索';ai.value=kbUI.ask;ai.disabled=!sampleFn;
+    ai.oninput=()=>{kbUI.ask=ai.value};autoGrow(ai,()=>askF.requestSubmit());
+    const ab=el('button','primary',kbUI.asking?'回答中…':'提问');ab.type='submit';ab.disabled=!sampleFn||kbUI.asking;
+    askF.append(ai,ab);
+    if(kbUI.asking)askF.append(btn(null,'停止',()=>{if(kbUI.askCtl)kbUI.askCtl.abort()}));
+    askF.onsubmit=e=>{e.preventDefault();runAsk()};
+    head.append(askF);
+    if(kbUI.asking||kbUI.answer||kbUI.askErr){
+      const ans=el('div','kb-answer');const at=el('div',null,kbUI.answer||(kbUI.asking?'正在查找…':''));at.id='kb-answer';ans.append(at);
+      if(kbUI.askErr)ans.append(el('div','err',kbUI.askErr));
+      if(!kbUI.asking&&kbUI.answer)ans.append(btn('linkish','清除回答',()=>{kbUI.answer='';kbUI.askErr='';render()}));
+      head.append(ans);
+    }
+    // 搜索
+    const sr=el('div','kb-search');const si=el('input');si.id='kb-q';si.type='search';si.placeholder='搜索关键词，如 VCS、折扣、90 天';si.value=kbUI.q;
+    si.oninput=()=>{kbUI.q=si.value;render()};sr.append(si);head.append(sr);
+    box.append(head);
+
+    // 整理入库
+    if(canWrite)box.append(renderSortPanel(pend));
+
+    // 目录 + 列表
+    const lay=el('div','kb-layout');
+    const dir=el('nav','kb-dir');dir.setAttribute('aria-label','知识库目录');
+    const allB=btn('dir-item'+(kbUI.prog==='all'?' on':''),null,()=>{kbUI.prog='all';kbUI.topic='';render()});allB.append(el('span',null,'全部'),el('span','n',String(kbItems.length)));dir.append(allB);
+    for(const p of PROGS){
+      const grp=el('div','dir-grp');
+      const its=kbItems.filter(i=>i.prog===p.k);
+      const pb=btn('dir-prog'+(kbUI.prog===p.k&&!kbUI.topic?' on':''),null,()=>{kbUI.prog=p.k;kbUI.topic='';render()});pb.append(el('span',null,p.n),el('span','n',String(its.length)));grp.append(pb);
+      for(const t of topics(p.k)){
+        const n=its.filter(i=>i.topic===t).length;
+        const row=el('div','dir-row');
+        const tb=btn('dir-item'+(kbUI.prog===p.k&&kbUI.topic===t?' on':''),null,()=>{kbUI.prog=p.k;kbUI.topic=t;render()});tb.append(el('span',null,t),el('span','n',n?String(n):''));row.append(tb);
+        if(kbUI.manage&&canWrite&&!n)row.append(btn('rm','删除',()=>saveTopics(p.k,topics(p.k).filter(x=>x!==t)),'删除主题 '+t));
+        grp.append(row);
+      }
+      const other=its.filter(i=>!topics(p.k).includes(i.topic));
+      if(other.length){const tb=btn('dir-item'+(kbUI.prog===p.k&&kbUI.topic==='__other'?' on':''),null,()=>{kbUI.prog=p.k;kbUI.topic='__other';render()});tb.append(el('span',null,'其他'),el('span','n',String(other.length)));grp.append(tb)}
+      if(kbUI.manage&&canWrite){
+        const af=el('form','dir-add');const ti=el('input');ti.id='kb-newtopic-'+p.k;ti.placeholder='新主题';ti.maxLength=20;ti.value=kbUI.newTopic[p.k];ti.oninput=()=>{kbUI.newTopic[p.k]=ti.value};
+        const ab2=el('button',null,'添加');ab2.type='submit';af.append(ti,ab2);
+        af.onsubmit=e=>{e.preventDefault();const v=ti.value.trim();if(!v||topics(p.k).includes(v))return;kbUI.newTopic[p.k]='';saveTopics(p.k,[...topics(p.k),v])};
+        grp.append(af);
+      }
+      dir.append(grp);
+    }
+    if(canWrite)dir.append(btn('linkish',kbUI.manage?'完成':'管理主题',()=>{kbUI.manage=!kbUI.manage;render()}));
+    lay.append(dir);
+
+    const main=el('div','kb-main');
+    let list=kbItems.filter(i=>(kbUI.prog==='all'||i.prog===kbUI.prog)&&(!kbUI.topic||(kbUI.topic==='__other'?!topics(i.prog).includes(i.topic):i.topic===kbUI.topic))&&matchQ(itemText(i)));
+    list.sort((a,b)=>(a.prog+a.topic).localeCompare(b.prog+b.topic,'zh')||(b.updatedAt||0)-(a.updatedAt||0));
+    const crumb=el('div','kb-crumb',(kbUI.prog==='all'?'全部业务':progName(kbUI.prog))+(kbUI.topic?' / '+(kbUI.topic==='__other'?'其他':kbUI.topic):'')+(kbUI.q.trim()?' · 搜索「'+kbUI.q.trim()+'」':'')+' · '+list.length+' 条');
+    main.append(crumb);
+    if(!kbReady)main.append(el('div','empty','正在加载…'));
+    else if(!list.length)main.append(el('div','empty',kbItems.length?'这里还没有符合条件的条目。':'知识库还是空的。点上方「整理入库」，把待整理的记录收进来。'));
+    for(const it of list)main.append(kbUI.edit&&kbUI.edit.id===it.id?renderItemEdit():renderItem(it));
+    // 搜索时也显示待整理里的匹配
+    if(kbUI.q.trim()){
+      const pm=pend.filter(n=>matchQ(noteBrief(n)+' '+(n.meeting||'')+' '+(n.people||'')));
+      if(pm.length){const pw=el('div','kb-pmatch');pw.append(el('div','older-title','待整理里的匹配 · '+pm.length));for(const n of pm)pw.append(el('div','pm-row',fmtDay(n.date)+'　'+noteBrief(n)));main.append(pw)}
+    }
+    lay.append(main);
+    box.append(lay);
+  }
+
+  function renderItem(it){
+    const open=kbUI.openItems.has(it.id)||!!kbUI.q.trim();
+    const card=el('article','kb-item'+(open?' open':''));
+    const top=el('div','kb-item-top');
+    const h=el('h3','kb-title');const tb=btn('kb-title-btn',(open?'▾ ':'▸ ')+it.title,()=>{open?kbUI.openItems.delete(it.id):kbUI.openItems.add(it.id);render()},(open?'收起：':'展开全文：')+it.title);
+    tb.setAttribute('aria-expanded',open);h.append(tb);
+    const tt=el('div');tt.append(h);
+    const tags=el('div','nmeta');tags.append(el('span','tag p-'+it.prog,progShort(it.prog)),el('span','tag',it.topic||'未分主题'));
+    if((it.history||[]).length)tags.append(el('span','tag t-optimize','改过 '+it.history.length+' 次'));
+    tags.append(el('span','who','更新于 '+fmtTs(it.updatedAt||it.createdAt)));
+    tt.append(tags);top.append(tt);
+    if(canWrite){const acts=el('div','row-acts');
+      acts.append(btn(null,'编辑',()=>{kbUI.edit={id:it.id,prog:it.prog,topic:it.topic,title:it.title,summary:it.summary,detail:it.detail||'',keep:true};render();const t=$('kbe-summary');if(t)t.focus()}));
+      acts.append(btn(kbUI.confirmDel===it.id?'sure':null,kbUI.confirmDel===it.id?'确认删除':'删除',async()=>{if(kbUI.confirmDel===it.id){kbUI.confirmDel=null;try{await db.doc('kb_items/'+it.id).delete();for(const n of notes.filter(n=>n.kbItem===it.id))await db.doc('notes/'+n.id).update({kbStatus:'',kbItem:''})}catch(e){fail(e)}}else{kbUI.confirmDel=it.id;render()}}));
+      top.append(acts)}
+    card.append(top);
+    card.append(el('p','kb-summary'+(open?'':' clamp'),it.summary));
+    if(!open){
+      const more=[it.detail?'细节':'',(it.cases||[]).length?'个案 '+it.cases.length:'',(it.sources||[]).length?'原始记录 '+it.sources.length:'',(it.history||[]).length?'历史 '+it.history.length:''].filter(Boolean);
+      if(more.length)card.append(btn('linkish kb-more','展开全文（'+more.join(' · ')+'）',()=>{kbUI.openItems.add(it.id);render()}));
+      return card;
+    }
+    if(it.detail)card.append(el('div','kb-detail',it.detail));
+    if((it.cases||[]).length){const cw=el('div','kb-cases');cw.append(el('div','kb-label','相关个案'));const ul=el('ul');for(const c of it.cases){const li=el('li');li.append(el('span','who',fmtDay(c.date)+'　'),document.createTextNode(c.text));ul.append(li)}cw.append(ul);card.append(cw)}
+    const orig=(it.sources||[]).map(s=>notes.find(n=>n.id===s.noteId)).filter(Boolean);
+    if(orig.length){const ow=el('div','kb-orig');ow.append(el('div','kb-label','原始记录'));
+      for(const n of orig){const r=el('div','orig-row');r.append(el('div','who',fmtDay(n.date)+(n.meeting?' · '+n.meeting:'')),el('div','orig-text',noteBrief(n)));ow.append(r)}card.append(ow)}
+    if((it.sources||[]).length){const sw=el('div','kb-src');sw.append(el('span','kb-label','来源'));
+      for(const s of it.sources){sw.append(el('span','src-chip',[fmtDay(s.date),s.meeting,s.people?'@'+s.people:''].filter(Boolean).join(' · ')))}card.append(sw)}
+    if((it.history||[]).length){const d=el('details','kb-hist');d.append(el('summary',null,'历史版本（'+it.history.length+'）'));
+      for(const h of [...it.history].reverse()){const hv=el('div','hist-row');hv.append(el('div','who',(h.from?fmtTs(h.from):'')+' – '+fmtTs(h.until)),el('div',null,h.summary));if(h.detail)hv.append(el('div','kb-detail',h.detail));d.append(hv)}
+      card.append(d)}
+    return card;
+  }
+  function renderItemEdit(){
+    const e=kbUI.edit;const f=el('form','kb-item form');f.noValidate=true;
+    const pf=el('div','fld span3');pf.append('业务');pf.append(chipGroup(PROGS.map(p=>({k:p.k,n:p.short,cls:'p-'+p.k})),e.prog,k=>{e.prog=k;if(!topics(k).includes(e.topic))e.topic=topics(k)[0];render()},'kbe-prog-'));f.append(pf);
+    const tf=el('label','fld span3');tf.append('主题');const ts=el('select');ts.id='kbe-topic';for(const t of topics(e.prog)){const o=el('option',null,t);o.value=t;if(t===e.topic)o.selected=true;ts.append(o)}ts.onchange=()=>{e.topic=ts.value};tf.append(ts);f.append(tf);
+    const mk=(lab,id,key,cls,ta)=>{const l=el('label','fld '+cls);l.append(lab);const i=el(ta?'textarea':'input',ta?'grow':null);i.id=id;i.value=e[key];if(ta){i.dataset.grow='1';autoGrow(i)}i.oninput=()=>{e[key]=i.value};l.append(i);return l};
+    f.append(mk('标题','kbe-title','title','span6'));
+    f.append(mk('一句话结论','kbe-summary','summary','span6',true));
+    f.append(mk('细节与适用条件','kbe-detail','detail','span6',true));
+    const acts=el('div','form-acts span6');
+    const sb=el('button','primary','保存');sb.type='submit';acts.append(sb);
+    const cl=el('label','chk-line');const cb=el('input');cb.type='checkbox';cb.id='kbe-keep';cb.checked=e.keep;cb.onchange=()=>{e.keep=cb.checked};cl.append(cb,'规则有变化，把旧版本保存到历史');acts.append(cl);
+    acts.append(btn(null,'取消',()=>{kbUI.edit=null;render()}));
+    f.append(acts);
+    f.onsubmit=async ev=>{ev.preventDefault();const cur=kbItems.find(i=>i.id===e.id);if(!cur){kbUI.edit=null;render();return}
+      const patch={prog:e.prog,topic:e.topic,title:e.title.trim()||cur.title,summary:e.summary.trim(),detail:e.detail.trim(),updatedAt:Date.now()};
+      if(e.keep&&(patch.summary!==cur.summary||patch.detail!==(cur.detail||'')))patch.history=[...(cur.history||[]),{summary:cur.summary,detail:cur.detail||'',until:Date.now(),from:cur.updatedAt||cur.createdAt||null}];
+      kbUI.edit=null;render();try{await db.doc('kb_items/'+e.id).update(patch)}catch(err){fail(err)}};
+    return f;
+  }
+
+  function renderSortPanel(pend){
+    const p=el('section','panel kb-sort');
+    const h=el('div','panel-head');
+    const hl=el('div');hl.append(el('div','sec-title small','整理入库'),el('div','range',kbDraft?'Claude 的整理建议，逐条确认或修改后收录。':pend.length?'有 '+pend.length+' 条记录待整理：规则/口径、Host 个案、已采纳的想法、已确认的问题。建议每周整理一次。':'没有待整理的记录。'));
+    const acts=el('div','acts');
+    if(kbDraft){
+      acts.append(btn('btn primary','确认收录所选（'+kbDraft.proposals.filter(x=>x.include!==false).length+'）',confirmDraft));
+      acts.append(btn('btn','放弃这次建议',discardDraft));
+    } else if(pend.length){
+      if(kbUI.sorting)acts.append(btn('btn',  '停止',()=>{if(kbUI.sortCtl)kbUI.sortCtl.abort()}));
+      else if(sampleFn)acts.append(btn('btn primary','让 Claude 整理 '+pend.length+' 条',runSort));
+    }
+    h.append(hl,acts);p.append(h);
+    if(kbUI.sorting)p.append(el('div','hint pad','正在处理，可能需要半分钟…'));
+    if(kbUI.sortErr)p.append(el('div','err pad',kbUI.sortErr));
+    if(kbDraft){
+      const ol=el('ol','draft-list');
+      kbDraft.proposals.forEach((pr,i)=>{
+        const li=el('li','draft'+(pr.include===false?' off':''));
+        const hd=el('div','draft-hd');
+        const cl=el('label','chk-line');const cb=el('input');cb.type='checkbox';cb.id='dr-'+i+'-inc';cb.checked=pr.include!==false;cb.onchange=()=>{pr.include=cb.checked;saveDraft()};cl.append(cb,'收录');
+        const actName={new:'新条目',merge:'补充到已有条目',update:'更新已有条目（旧版存入历史）',case:'作为已有条目的个案'}[pr.action];
+        const target=pr.itemId&&kbItems.find(x=>x.id===pr.itemId);
+        hd.append(cl,el('span','tag '+(pr.action==='new'?'p-drh':'t-optimize'),actName),el('span','tag',progShort(pr.prog)+' / '+pr.topic));
+        if(target)hd.append(el('span','who','→ '+target.title));
+        li.append(hd);
+        if(kbUI.draftEdit===i){
+          const f=el('div','draft-edit');
+          const ts=el('select');ts.id='dr-'+i+'-topic';for(const p2 of PROGS)for(const t of topics(p2.k)){const o=el('option',null,p2.short+' / '+t);o.value=p2.k+'|'+t;if(p2.k===pr.prog&&t===pr.topic)o.selected=true;ts.append(o)}
+          ts.onchange=()=>{const [a,b]=ts.value.split('|');pr.prog=a;pr.topic=b};
+          const as=el('select');as.id='dr-'+i+'-act';
+          const opts=[['new','新条目']];if(kbItems.length)opts.push(['merge','补充到已有条目'],['update','更新已有条目'],['case','作为个案']);
+          for(const [k,n] of opts){const o=el('option',null,n);o.value=k;if(k===pr.action)o.selected=true;as.append(o)}
+          as.onchange=()=>{pr.action=as.value;if(pr.action!=='new'&&!pr.itemId&&kbItems[0])pr.itemId=kbItems[0].id;render()};
+          f.append(ts,as);
+          if(pr.action!=='new'){const is=el('select');is.id='dr-'+i+'-item';for(const it of kbItems){const o=el('option',null,it.title);o.value=it.id;if(it.id===pr.itemId)o.selected=true;is.append(o)}is.onchange=()=>{pr.itemId=is.value};f.append(is)}
+          const mk=(ph,key,id)=>{const t=el('textarea','grow');t.id=id;t.placeholder=ph;t.value=pr[key];t.dataset.grow='1';autoGrow(t);t.oninput=()=>{pr[key]=t.value};return t};
+          if(pr.action!=='case'){f.append(mk('标题','title','dr-'+i+'-title'),mk('一句话结论','summary','dr-'+i+'-sum'),mk('细节与适用条件（可空）','detail','dr-'+i+'-det'))}
+          f.append(btn('btn primary','完成修改',()=>{kbUI.draftEdit=null;saveDraft();render()}));
+          li.append(f);
+        } else {
+          if(pr.action!=='case'){li.append(el('div','kb-title sm',pr.title));li.append(el('div',null,pr.summary));if(pr.detail)li.append(el('div','kb-detail',pr.detail))}
+          li.append(btn('linkish','修改',()=>{kbUI.draftEdit=i;render()}));
+        }
+        const srcs=el('div','draft-src');srcs.append(el('span','kb-label','来自记录'));
+        for(const id of pr.noteIds){const n=notes.find(x=>x.id===id);if(n)srcs.append(el('div','pm-row',fmtDay(n.date)+'　'+noteBrief(n)))}
+        li.append(srcs);ol.append(li);
+      });
+      p.append(ol);
+    } else if(pend.length&&!kbUI.sorting){
+      const ul=el('ul','pend-list');
+      for(const n of pend){
+        const li=el('li','pm-row');const c=normCat(n.cat);
+        li.append(el('span','chip c-'+(c||'none'),catName(c)||'记录'),el('span','t',noteBrief(n)),el('span','from',shortLabel('day',n.date)));
+        const acts=el('span','row-acts');
+        acts.append(btn(null,'手动收录',()=>{const pr=n.prog==='impact'?'impact':'drh';kbDraft={proposals:[{key:'h'+n.id,noteIds:[n.id],action:'new',itemId:'',prog:pr,topic:topics(pr)[0],title:n.text.slice(0,16),summary:noteBrief(n),detail:'',include:true}],createdAt:Date.now()};kbUI.draftEdit=0;saveDraft();render()}));
+        acts.append(btn(null,'不收录',()=>put('notes',n.id,{kbStatus:'skip'})));
+        li.append(acts);ul.append(li);
+      }
+      p.append(ul);
+      if(!sampleFn)p.append(el('div','hint pad','Claude 整理当前不可用，可以逐条「手动收录」。'));
+    }
+    return p;
+  }
+
+  render();
+
+  (async()=>{
+    try{
+      const c=window.claude;
+      db=c&&c.use?await c.use('db'):null;
+      const user=c&&c.use?await c.use('user'):null;
+      if(user&&user.can){const w=await user.can('data.write');if(w===false)canWrite=false}
+    }catch(e){db=null}
+    try{if(window.claude&&window.claude.use)window.claude.use('assets').then(a=>{assetsFn=a||null;render()},()=>{})}catch(e){}
+    try{if(window.claude&&window.claude.use)window.claude.use('downloads').then(a=>{downloadsFn=a||null;render()},()=>{})}catch(e){}
+    try{if(window.claude&&window.claude.use)window.claude.use('sample').then(f=>{sampleFn=f||null;render()},()=>{})}catch(e){}
+    if(!db){ready=true;canWrite=false;render();return}
+    const got=new Set();const mark=c=>{got.add(c);if(got.size>=3)ready=true};
+    const sub=(coll,set)=>db.collection(coll).onSnapshot(snap=>{set(snap.docs.map(d=>Object.assign({id:d.id},d.data())));mark(coll);render()},()=>{mark(coll);render()});
+    sub('goals',v=>{goals=v});
+    db.collection('tasks').onSnapshot(snap=>{tasks=snap.docs.map(d=>Object.assign({id:d.id},d.data()));tasksReady=true;render()},()=>{tasksReady=true;render()});
+    sub('events',v=>{events=v;if(evForm.id&&!events.some(e=>e.id===evForm.id))resetEv()});
+    sub('notes',v=>{notes=v;if(ntForm.id&&!notes.some(x=>x.id===ntForm.id))resetNt()});
+    db.collection('kb_items').onSnapshot(snap=>{kbItems=snap.docs.map(d=>Object.assign({id:d.id},d.data()));kbReady=true;render()},()=>{kbReady=true;render()});
+    db.collection('kbmeta').onSnapshot(snap=>{const m={};snap.docs.forEach(d=>{m[d.id]=d.data()});kbmetaDocs=m;kbConfig=m.config||null;routines=m.routines&&Array.isArray(m.routines.items)?m.routines.items:[];kbDraft=m.draft&&Array.isArray(m.draft.proposals)&&m.draft.proposals.length?m.draft:null;render()},()=>{});
+  })();
+})();
+</script>
+
+</body>
+</html>
