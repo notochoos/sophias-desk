@@ -15,6 +15,8 @@
 | `google/` | Google 版：数据存 Google 表格。`Code.gs` 是后台；`Index.html` 由 build.py 生成 |
 | `build.py` | 改完 src 或 shim 后运行 `python3 build.py`，重新生成两个网页 |
 | `AGENTS.md` | 给 AI 编程工具看的修改规则 |
+| `google/Mcp.gs` | MCP 插件接口：让任何支持 MCP 的 AI 读写 Desk 数据 |
+| `mcp/` | 插件说明和本地桥接文件，见 mcp/README.md |
 
 ## 数据结构
 数据分 6 类（collection），每条记录 = `id` + 字段：

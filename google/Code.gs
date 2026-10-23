@@ -202,5 +202,6 @@ function api_(key, action, args) {
 function doPost(e) {
   var body = {};
   try { body = JSON.parse(e.postData.contents || '{}'); } catch (x) {}
+  if (e.parameter && e.parameter.mcp) return mcpHttp_(e.parameter.mcp, body);
   return api_(body.key, body.action, body.args);
 }
