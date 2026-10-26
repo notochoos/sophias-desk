@@ -137,6 +137,7 @@ form.form{border-top:1px dashed var(--line);padding:14px 18px 16px;display:grid;
 .pg:hover{border-color:var(--accent);color:var(--accent)}
 .pg.now{font-size:.76rem;color:var(--accent);border-color:var(--accent)}
 .lvl{font-family:var(--f-display);font-weight:700;font-size:1.2rem}
+.lvl .wk-no{font-family:var(--f-mono);font-weight:500;font-size:.85rem;color:var(--muted);margin-left:8px;letter-spacing:.02em}
 .prog{display:flex;align-items:center;gap:12px}
 .pct{font-family:var(--f-display);font-weight:700;font-size:1.5rem;line-height:1;font-variant-numeric:tabular-nums;min-width:3.2ch}
 .bar{flex:1;height:8px;background:var(--accent-soft);border-radius:99px;overflow:hidden}
@@ -1108,7 +1109,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
       const pct=mine.length?Math.round(done/mine.length*100):0;
       const s=el('section','sheet lv-'+L.key);s.setAttribute('aria-label',L.name+'目标');
       const h=el('div','sheet-head');
-      const r1=el('div','label-row');const lv=el('div');lv.append(el('div','lvl',title),el('div','range',labelFor(L.key,key)));
+      const r1=el('div','label-row');const lv=el('div');const lvt=el('div','lvl',title);if(L.key==='week'&&!/^第/.test(title))lvt.append(el('span','wk-no','W'+Number(key.split('-W')[1])));lv.append(lvt,el('div','range',labelFor(L.key,key)));
       const pager=el('div','pager');
       const unitName={month:'月',week:'周',day:'天'}[L.key];
       pager.append(btn('pg','‹',()=>{colOff[L.key]=off-1;render()},'上一'+(L.key==='day'?'天':unitName)));
