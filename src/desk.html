@@ -401,6 +401,7 @@ form.tk-add textarea{border:1px dashed var(--line);background:var(--paper);borde
 .tk-fadd button{border:0;background:transparent;color:var(--muted);font-size:.76rem;padding:1px 6px;border-radius:5px}
 .tk-fadd button:hover{background:var(--line);color:var(--ink)}
 .tk-fadd .tk-mv:disabled{display:none}
+.tk-fadd .tk-save{display:none;color:var(--sheet);background:var(--accent);font-weight:600;margin-right:6px}.tk-fadd .tk-save.on{display:inline-block}.tk-fadd .tk-save:hover{background:var(--accent);color:var(--sheet);opacity:.9}
 .tk-fadd .tk-del{margin-left:6px}.tk-fadd .tk-del.danger{color:var(--bad);font-weight:600}
 .tk-fadd .tk-mv:first-of-type{margin-left:6px}
 .tk-link{display:flex;gap:6px;flex-wrap:wrap;padding:2px 6px;width:100%}
@@ -1517,6 +1518,9 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
       ai.oninput=()=>{tkUI.draft[t.id]=ai.value};
       autoGrow(ai,()=>af.requestSubmit());
       const ab=el('div','tk-body');ab.append(ai,tkFilesRow(t,null,[],true));
+      // 新议题还没保存时，给一个明确的「添加」按钮；保存后才会出现删除、上移等选项
+      {const fa=ab.querySelector('.tk-fadd');if(fa){const sv=btn('tk-save'+((tkUI.draft[t.id]||'').trim()?' on':''),'✓ 添加这条议题',()=>af.requestSubmit(),'添加这条议题');sv.addEventListener('pointerdown',e=>e.preventDefault());fa.prepend(sv);
+        ai.addEventListener('input',()=>sv.classList.toggle('on',!!ai.value.trim()))}}
       af.append(el('span','tk-no',(items.length+1)+'.'),ab);
       fileDrop(af,fs=>tkAttach(t,null,fs));
       ai.addEventListener('paste',e=>{const fs=e.clipboardData?[...e.clipboardData.files]:[];if(fs.length){e.preventDefault();tkAttach(t,null,fs)}});
