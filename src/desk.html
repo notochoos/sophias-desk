@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a planner page read top to bottom — 日程 (only booked slots) → 三栏目标 (月/周/日) → Learnings & Task; 周报 opens under the header */
+/* Layout: a planner page read top to bottom — 日程 (only booked slots) → 三栏目标 (月/周/日) → Learnings & Task */
 :root{
   --paper:#F1F4F2; --sheet:#FFFFFF; --ink:#1C2724; --muted:#66736F; --line:#DCE3DF;
   --accent:#1E6B5C; --accent-soft:#E2EFEB;
@@ -52,10 +52,6 @@ h1{font-family:var(--f-display);font-weight:700;font-size:1.7rem;margin:0;letter
 .hint{font-size:.8rem;color:var(--muted)}
 .empty{padding:18px;color:var(--muted);font-size:.88rem;text-align:center}
 
-/* ---- 周报 ---- */
-.report{border-color:var(--accent)}
-.report textarea{display:block;width:100%;box-sizing:border-box;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:.9rem;line-height:1.7;padding:14px 18px;resize:vertical;min-height:320px}
-.report .acts{display:flex;gap:8px;flex-wrap:wrap}
 
 /* ---- 日程 ---- */
 .wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:0 18px 12px}
@@ -525,13 +521,11 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
       <button class="btn" id="next" type="button" aria-label="后一天">›</button>
       <button class="btn" id="today" type="button">今天</button>
       <input type="date" id="pick" aria-label="选择日期">
-      <button class="btn primary" id="open-report" type="button">生成周报</button>
     </div>
   </header>
 
   <div class="notice" id="notice" hidden></div>
   <div id="desk" class="view">
-  <section class="panel report" id="report" aria-label="周报" hidden></section>
   <section class="panel quick" id="quick" aria-label="速记"></section>
   <section class="panel" id="cal" aria-label="日程"></section>
   <div class="grid" id="grid"></div>
@@ -594,7 +588,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
   const drafts={};
   const evForm={open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:''};
   const ntForm={};
-  let ntFilter='all'; let reportOpen=false;
+  let ntFilter='all';
   const $=id=>document.getElementById(id);
   const CHECK='<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4l2.6 2.6L11 4.4" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
@@ -746,7 +740,6 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
   }
   $('bk-export').onclick=exportAll;
   if(GMODE){$('bk-import').hidden=false;$('bk-import').onclick=importAll}
-  $('open-report').onclick=()=>{reportOpen=!reportOpen;render();if(reportOpen)$('report').scrollIntoView({block:'nearest'})};
 
   function fail(err){
     if(err&&err.code==='invalid_argument'){canWrite=false;render();return}
@@ -760,14 +753,13 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
     const fid=document.activeElement&&document.activeElement.id;
     $('cur-date').textContent=(sel.getMonth()+1)+'月'+sel.getDate()+'日 '+WD[sel.getDay()];
     $('pick').value=dayKey(sel);
-    $('open-report').textContent=reportOpen?'收起周报':'生成周报';
     const isKB=view==='kb';
     $('desk').hidden=isKB;$('kb').hidden=!isKB;$('desk-nav').hidden=isKB;
     $('tab-desk').classList.toggle('on',!isKB);$('tab-kb').classList.toggle('on',isKB);
     $('tab-desk').setAttribute('aria-current',isKB?'false':'page');$('tab-kb').setAttribute('aria-current',isKB?'page':'false');
     const pc=pendingNotes().length;const bd=$('kb-badge');bd.hidden=!pc;bd.textContent=pc?String(pc):'';
     renderNotice();
-    if(isKB){renderKB()}else{renderReport();renderQuick();renderCal();renderGoals()}
+    if(isKB){renderKB()}else{renderQuick();renderCal();renderGoals()}
     if(fid){const e=$(fid);if(e&&e!==document.activeElement)e.focus()}
   }
 
@@ -2059,93 +2051,6 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
     if(bulk.err)acts.append(el('span','err',bulk.err));
     f.append(acts);
     return f;
-  }
-
-  /* ---------- 周报 ---------- */
-  function buildReport(){
-    const wk=weekKey(sel);const days=weekDays(wk);const inWeek=k=>days.includes(k);
-    const mk=monthKey(sel);const nwk=nextKey('week',wk);
-    const L=[];
-    L.push('【周报】'+wk.replace('-W','年第')+'周（'+labelFor('week',wk)+'）');
-    L.push('');
-    // 一、目标进度
-    const wg=[...routinesFor(wk,'week'),...goals.filter(g=>g.level==='week'&&g.period===wk&&!g.routine)];
-    const wgDone=wg.filter(g=>g.status==='done');
-    const pushed=goals.filter(g=>g.level==='week'&&(g.history||[]).includes(wk)&&g.period!==wk);
-    const mg=[...routinesFor(mk,'month'),...goals.filter(g=>g.level==='month'&&g.period===mk&&!g.routine)];
-    const dg=goals.filter(g=>g.level==='day'&&inWeek(g.period)&&!g.routine);
-    const rtDays=days.filter(k=>k<=todayKey());const rtAll=rtDays.flatMap(k=>routinesFor(k,"day"));const rtDone=rtAll.filter(g=>g.status==='done').length;
-    const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
-    L.push('一、目标进度');
-    L.push('· 本周计划：完成 '+wgDone.length+' / '+(wg.length+pushed.length)+'（'+pct(wgDone.length,wg.length+pushed.length)+'）');
-    for(const g of wgDone)L.push('  ✓ '+g.title);
-    for(const g of wg.filter(g=>g.status!=='done'))L.push('  ○ '+g.title+'（进行中）');
-    for(const g of pushed)L.push('  → '+g.title+'（顺延至'+shortLabel('week',g.period)+(g.status==='done'?'，已完成':'')+'）');
-    if(mg.length){const d=mg.filter(g=>g.status==='done').length;L.push('· '+Number(mk.split('-')[1])+'月目标：完成 '+d+' / '+mg.length+'（'+pct(d,mg.length)+'）');
-      for(const g of mg.filter(g=>g.status!=='done'))L.push('  ○ '+g.title)}
-    if(dg.length){const d=dg.filter(g=>g.status==='done').length;L.push('· 每日任务：本周 '+dg.length+' 项，完成 '+d+' 项（'+pct(d,dg.length)+'）')}
-    if(rtAll.length)L.push('· 每日固定目标：完成 '+rtDone+' / '+rtAll.length+' 次（'+pct(rtDone,rtAll.length)+'）');
-    if(!wg.length&&!pushed.length&&!mg.length&&!dg.length&&!rtAll.length)L.push('· 本周暂无目标记录');
-    L.push('');
-    // 二、会议
-    const ev=days.flatMap(k=>events.filter(e=>occursOn(e,k)));
-    if(ev.length){const c=k=>ev.filter(e=>(e.kind||'other')===k).length;
-      L.push('二、会议与讨论：会议 '+c('meeting')+' 场，讨论 '+c('discussion')+' 场'+(c('other')?'，其他 '+c('other')+' 项':''));
-      const tps=tasks.filter(t=>inWeek(t.evDate||t.due||'')&&tkItems(t).some(i=>i.outcome&&i.outcome.trim())).sort((a,b)=>(a.evDate||a.due)<(b.evDate||b.due)?-1:1);
-      for(const t of tps){L.push('· '+shortLabel('day',t.evDate||t.due)+' '+(t.title||'会议')+' 结论：');for(const i of tkItems(t))if(i.outcome&&i.outcome.trim())L.push('  - '+i.text.split('\n')[0]+'：'+i.outcome.trim().replace(/\s*\n\s*/g,'；'))}
-      L.push('')}
-    // 三、Learnings：按业务 → 现行/待优化分组，规则/口径标【规则】
-    const nt=notes.filter(n=>inWeek(n.date)&&!(n.task&&!normCat(n.cat)));
-    const num=ev.length?'三':'二';
-    L.push(num+'、本周 Learnings（'+nt.length+' 条）');
-    if(!nt.length)L.push('· 暂无记录');
-    const groups=[...PROGS.map(p=>({k:p.k,n:p.n})),{k:'',n:'其他'}];
-    const tag=n=>{const c=normCat(n.cat);return c==='rule'?'【规则】':c==='case'?'【个案】':c==='idea'?'【优化】':c==='doubt'?(n.done?'【已确认】':'【待确认】'):''};
-    for(const g of groups){
-      const xs=nt.filter(n=>(n.prog||'')===g.k);if(!xs.length)continue;
-      L.push('· '+g.n+'：');
-      const tracks=[...TRACKS,{k:'',n:''}];
-      for(const t of tracks){
-        const ys=xs.filter(n=>(n.track||'')===t.k).sort((a,b)=>(normCat(a.cat)==='rule'?0:1)-(normCat(b.cat)==='rule'?0:1));
-        if(!ys.length)continue;
-        if(t.n)L.push('  '+t.n+'：');
-        for(const n of ys)L.push((t.n?'   - ':'  - ')+tag(n)+n.text.replace(/\s*\n\s*/g,'；'));
-      }
-    }
-    L.push('');
-    // 四、待跟进
-    const nextNum=ev.length?'四':'三';
-    const openTasks=notes.filter(n=>n.task&&!n.done&&n.date<=days[6]);
-    const openDoubts=notes.filter(n=>normCat(n.cat)==='doubt'&&!n.done&&!n.task&&n.date<=days[6]);
-    L.push(nextNum+'、待跟进');
-    if(!openTasks.length&&!openDoubts.length)L.push('· 无');
-    for(const n of openTasks)L.push('· [待办] '+n.text.replace(/\s*\n\s*/g,'；')+(n.due?'（截止 '+shortLabel('day',n.due)+'）':''));
-    for(const n of openDoubts)L.push('· [待确认] '+n.text);
-    L.push('');
-    // 五、下周计划
-    const lastNum=ev.length?'五':'四';
-    const ng=goals.filter(g=>g.level==='week'&&g.period===nwk);
-    L.push(lastNum+'、下周计划（'+labelFor('week',nwk)+'）');
-    if(!ng.length)L.push('· 待补充');
-    for(const g of ng)L.push('· '+g.title+((g.history||[]).length?'（顺延）':''));
-    return L.join('\n');
-  }
-  function renderReport(){
-    const box=$('report');box.hidden=!reportOpen;if(!reportOpen){box.textContent='';return}
-    const prev=$('report-text');const keep=prev&&prev.dataset.edited==='1'&&prev.dataset.wk===weekKey(sel)?prev.value:null;
-    box.textContent='';
-    const wk=weekKey(sel);
-    const head=el('div','panel-head');
-    const hl=el('div');hl.append(el('div','sec-title','周报'),el('div','range',labelFor('week',wk)+' · 根据本周目标、日程和 Learnings 自动汇总，可直接修改后复制'));
-    const acts=el('div','acts');
-    acts.append(btn('btn primary','复制周报',ev=>{const t=$('report-text');copyText(t.value,ev.currentTarget);t.select()}));
-    acts.append(btn('btn','重新生成',()=>{const t=$('report-text');if(t)t.dataset.edited='0';render()}));
-    acts.append(btn('btn','收起',()=>{reportOpen=false;render()}));
-    head.append(hl,acts);box.append(head);
-    const ta=el('textarea');ta.id='report-text';ta.setAttribute('aria-label','周报内容');ta.dataset.wk=wk;
-    ta.value=keep!=null?keep:buildReport();ta.dataset.edited=keep!=null?'1':'0';
-    ta.oninput=()=>{ta.dataset.edited='1'};
-    box.append(ta);
   }
 
   /* ---------- 知识库 ---------- */
