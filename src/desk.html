@@ -586,7 +586,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
   let goals=[],events=[],notes=[]; let db=null; let canWrite=true; let ready=false;
   const editing={id:null}; const confirmDel={id:null};
   const drafts={};
-  const evForm={open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:''};
+  const evForm={open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:'',date:'',orig:'',scope:'one'};
   const ntForm={};
   let ntFilter='all';
   const $=id=>document.getElementById(id);
@@ -785,6 +785,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
     if((e.except||[]).includes(k))return false;
     if(e.date===k)return true;
     if((e.repeat!=='weekly'&&e.repeat!=='biweekly')||!e.date||k<e.date)return false;
+    if(e.until&&k>e.until)return false;
     const days=Math.round((parseKey(k)-parseKey(e.date))/864e5);
     return days%(e.repeat==='biweekly'?14:7)===0;
   }
@@ -817,7 +818,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
     i.addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Enter'||e.key==='Tab')hide()});
     wrap.append(i,pop);l.append(wrap);return l;
   }
-  function resetEv(){Object.assign(evForm,{open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:''})}
+  function resetEv(){Object.assign(evForm,{open:false,id:null,title:'',kind:'meeting',start:'14:00',end:'15:00',mno:'',place:'',repeat:'',err:'',date:'',orig:'',scope:'one'})}
   const calUI={topic:{},hist:{}};
   function topicFor(e,dk){return tasks.find(t=>t.eventId===e.id&&t.evDate===dk)}
   function linkedEvent(t){if(!t.eventId)return null;const e=events.find(x=>x.id===t.eventId);return e&&occursOn(e,t.evDate)?e:null}
@@ -868,7 +869,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
         else if(canWrite&&db&&tasksReady&&(e.kind||'other')!=='other')w.append(btn('tp-toggle add','＋ 准备会议议题',()=>createTopic(e,dk)));
         // 循环会议：历史议题
         const recurring=e.repeat==='weekly'||e.repeat==='biweekly';
-        const hist=recurring?tasks.filter(t=>t.eventId===e.id&&t.evDate&&t.evDate!==dk).sort((a,b)=>a.evDate<b.evDate?1:-1):[];
+        const sids=seriesIds(e);const hist=recurring?tasks.filter(t=>sids.includes(t.eventId)&&t.evDate&&t.evDate!==dk).sort((a,b)=>a.evDate<b.evDate?1:-1):[];
         const hs=calUI.hist[tkey]||{};
         if(hist.length){
           const tb=w.querySelector('.tp-toggle');const hb=btn('tp-toggle hist'+(hs.open?' on':''),(hs.open?'▾ ':'▸ ')+'历史议题 '+hist.length,()=>{calUI.hist[tkey]=Object.assign({},hs,{open:!hs.open});render()},'查看这个循环会议以前的议题');
@@ -876,7 +877,7 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
         }
         const acts=el('div','row-acts');
         if(canWrite&&db){
-          acts.append(btn(null,'编辑',()=>{Object.assign(evForm,{open:true,id:e.id,title:e.title,kind:e.kind||'other',start:e.start,end:e.end,mno:e.mno||'',place:e.place||'',repeat:e.repeat||'',err:''});render();const t=$('ev-title');if(t)t.focus()}));
+          acts.append(btn(null,'编辑',()=>{Object.assign(evForm,{open:true,id:e.id,title:e.title,kind:e.kind||'other',start:e.start,end:e.end,mno:e.mno||'',place:e.place||'',repeat:e.repeat||'',err:'',date:dk,orig:dk,scope:'one'});render();const t=$('ev-title');if(t)t.focus()}));
           if(e.repeat==='weekly'||e.repeat==='biweekly'){
             if(confirmDel.id===e.id){
               acts.append(btn('sure','只删这一次',()=>{confirmDel.id=null;put('events',e.id,{except:[...(e.except||[]),dk]})}));
@@ -927,10 +928,12 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
 
     const f=el('form','form');f.noValidate=true;
     const mk=(label,id,val,set,opt={})=>{const l=el('label','fld '+(opt.cls||''));l.append(label);const i=el('input');i.id=id;i.value=val;if(opt.type)i.type=opt.type;if(opt.ph)i.placeholder=opt.ph;if(opt.step)i.step=opt.step;i.maxLength=120;i.oninput=()=>set(i.value);l.append(i);return l};
+    if(!evForm.date)evForm.date=dk;
     f.append(mk('内容','ev-title',evForm.title,v=>evForm.title=v,{cls:'span3',ph:'例如：产品周会'}));
     const kf=el('div','fld span3');kf.append('类型');const ks=el('div','chips');
     for(const K of KINDS){const b=btn((evForm.kind===K.k?'on ':'')+'k-'+K.k,K.n,()=>{evForm.kind=K.k;render()});b.id='ev-kind-'+K.k;b.setAttribute('aria-pressed',evForm.kind===K.k);ks.append(b)}
     kf.append(ks);f.append(kf);
+    {const l=el('label','fld');l.append('日期');const i=el('input');i.type='date';i.id='ev-date';i.value=evForm.date;i.onchange=()=>{if(i.value){evForm.date=i.value;render()}};l.append(i);f.append(l)}
     f.append(timeField('开始','ev-start','start'));
     f.append(timeField('结束','ev-end','end'));
     f.append(mk('会议号（选填）','ev-mno',evForm.mno,v=>evForm.mno=v,{cls:'span2',ph:'例如：123 456 789'}));
@@ -940,7 +943,14 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
      for(const [k,label] of [['weekly','每周重复（每'+wd+'同一时间）'],['biweekly','每两周重复（隔周'+wd+'同一时间）']]){
        const rl=el('label','chk-line');const rc=el('input');rc.type='checkbox';rc.id='ev-repeat-'+k;rc.checked=evForm.repeat===k;
        rc.onchange=()=>{evForm.repeat=rc.checked?k:'';render()};rl.append(rc,label);row.append(rl)}
-     f.append(row)}
+     f.append(row)
+     // 循环日程改了日期：只改这一次，还是从这次起都改
+     if(editing&&(editing.repeat==='weekly'||editing.repeat==='biweekly')&&evForm.date!==evForm.orig){
+       const sc=el('div','span6 rep-row');
+       for(const [k,label] of [['one','只改这一次（'+md(evForm.orig)+' 这次挪到 '+md(evForm.date)+'，其它次不变）'],['all','从这次起都改（以后每'+WD[parseKey(evForm.date).getDay()]+'，之前的记录不变）']]){
+         const rl=el('label','chk-line');const rc=el('input');rc.type='radio';rc.name='ev-scope';rc.id='ev-scope-'+k;rc.checked=evForm.scope===k;rc.onchange=()=>{evForm.scope=k;render()};rl.append(rc,label);sc.append(rl)}
+       f.append(sc)}
+    }
     const acts=el('div','form-acts span6');
     const sb=el('button','primary',evForm.id?'保存修改':'添加到 '+md(dk));sb.type='submit';acts.append(sb);
     acts.append(btn(null,'取消',()=>{resetEv();render()}));
@@ -954,10 +964,43 @@ form.tk-new button{border:0;background:var(--accent);color:var(--sheet);border-r
       if(!normTime(evForm.start)||!normTime(evForm.end)){evForm.err='时间格式不对，请输入如 10:05 或 1005。';render();return}
       if(toMin(evForm.end)<=toMin(evForm.start)){evForm.err='结束时间需要晚于开始时间。';render();return}
       const data={title,kind:evForm.kind,start:evForm.start,end:evForm.end,mno:evForm.mno.trim(),place:evForm.place.trim(),repeat:evForm.repeat||''};
-      const id=evForm.id;resetEv();render();
-      if(id)put('events',id,data);else create('events',Object.assign({date:dk},data));
+      const id=evForm.id,nd=evForm.date||dk,od=evForm.orig,scope=evForm.scope;resetEv();render();
+      if(!id){create('events',Object.assign({date:nd},data));return}
+      const cur=events.find(x=>x.id===id);
+      if(!cur||nd===od){put('events',id,data);return}
+      moveEvent(cur,od,nd,data,scope);
     };
     box.append(f);
+  }
+
+  // 一个循环日程「从某次起都改」后会拆成新旧两段，用 prevId 串起来，历史议题沿用
+  function seriesIds(e){const ids=[e.id];let p=e.prevId;const seen=new Set(ids);while(p&&!seen.has(p)){ids.push(p);seen.add(p);const x=events.find(y=>y.id===p);p=x&&x.prevId}return ids}
+  // 改会议日期：会议议题跟着走
+  async function moveEvent(e,od,nd,data,scope){
+    const rep=e.repeat==='weekly'||e.repeat==='biweekly';
+    const moveTopic=(t,newId,newDate)=>{const p={evDate:newDate,due:newDate};if(newId)p.eventId=newId;t.evDate=newDate;t.due=newDate;if(newId)t.eventId=newId;return put('tasks',t.id,p)};
+    try{
+      if(!rep){
+        await put('events',e.id,Object.assign({},data,{date:nd}));
+        for(const t of tasks.filter(t=>t.eventId===e.id&&t.evDate===od))await moveTopic(t,null,nd);
+        return;
+      }
+      if(scope==='one'){
+        const ref=db.collection('events').doc();
+        await put('events',e.id,{except:[...(e.except||[]),od]});
+        await ref.set(Object.assign({},data,{date:nd,repeat:'',movedFrom:e.id,createdAt:Date.now()}));
+        for(const t of tasks.filter(t=>t.eventId===e.id&&t.evDate===od))await moveTopic(t,ref.id,nd);
+        return;
+      }
+      // 从这次起都改：旧系列到上一天为止，新系列从新日期开始
+      const delta=Math.round((parseKey(nd)-parseKey(od))/864e5);
+      const prev=dayKey(new Date(parseKey(od).getTime()-864e5));
+      const ref=db.collection('events').doc();
+      const shift=k=>dayKey(new Date(parseKey(k).getTime()+delta*864e5));
+      await ref.set(Object.assign({},data,{date:nd,repeat:data.repeat||e.repeat,prevId:e.id,except:(e.except||[]).filter(k=>k>od).map(shift),createdAt:Date.now()}));
+      if(od<=e.date)await put('events',e.id,{until:prev,date:e.date});else await put('events',e.id,{until:prev});
+      for(const t of tasks.filter(t=>t.eventId===e.id&&t.evDate&&t.evDate>=od))await moveTopic(t,ref.id,shift(t.evDate));
+    }catch(err){fail(err)}
   }
 
   /* ---------- 目标 ---------- */

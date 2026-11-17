@@ -104,6 +104,7 @@ function mcpOccurs_(e, k) {
   if ((e.except || []).indexOf(k) >= 0) return false;
   if (e.date === k) return true;
   if ((e.repeat !== 'weekly' && e.repeat !== 'biweekly') || !e.date || k < e.date) return false;
+  if (e.until && k > e.until) return false;
   var days = Math.round((mcpDate_(k) - mcpDate_(e.date)) / 864e5); return days % (e.repeat === 'biweekly' ? 14 : 7) === 0;
 }
 function mcpRoutinesFor_(all, level, key, day) {
